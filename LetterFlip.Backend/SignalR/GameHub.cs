@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.SignalR;
+﻿using LetterFlip.Backend.Services;
+using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
 
 namespace LetterFlip.Backend.SignalR
@@ -8,6 +9,12 @@ namespace LetterFlip.Backend.SignalR
         // Sample word for demonstration
         private readonly string currentWord = "EXAMPLE";
         private readonly Dictionary<string, string> waitingPlayers = new Dictionary<string, string>();
+        private readonly IAdaptiveWordProvider adaptiveWordProvider;
+
+        public GameHub(AdaptiveWordProvider adaptiveWordProvider)
+        {
+            this.adaptiveWordProvider = adaptiveWordProvider;
+        }
 
         public async Task CheckTile(string letter)
         {

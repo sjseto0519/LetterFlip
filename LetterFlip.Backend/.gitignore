@@ -19,3 +19,5 @@ packages/
 *.vssscc
 *.DS_Store
 *.log
+
+appsettings.json
