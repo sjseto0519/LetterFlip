@@ -1,0 +1,8 @@
+<template>
+    <h1>Join a Game</h1>
+    <div if.bind="waitingForOpponent">(Waiting for opponent)</div>
+    <input type="text" value.bind="userName" placeholder="Enter User Name">
+    <input type="text" value.bind="gameId" placeholder="Enter Game ID">
+    <button click.delegate="joinGame()">Join Game</button>
+</template>
+  
