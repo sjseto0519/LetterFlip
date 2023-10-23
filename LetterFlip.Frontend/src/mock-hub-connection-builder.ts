@@ -1,5 +1,9 @@
 import { IHubConnectionBuilder } from "interfaces/hub-connection-builder";
 
+export interface InvokeMessagesResponse {
+    messages: { messageName: string, delay: number }[]
+}
+
 export class MockHubConnectionBuilder implements IHubConnectionBuilder {
 
     private callbacks: { [key: string]: ((data: any) => void)[]} = {};
@@ -7,35 +11,25 @@ export class MockHubConnectionBuilder implements IHubConnectionBuilder {
     private reconnectedCallbacks: (() => void)[] = [];
     private closeCallbacks: (() => void)[] = [];
 
-    constructor() {}
-
     async start() {
         // simulate initial startup time
         await new Promise(resolve => setTimeout(resolve, 10));
     }
 
     async invoke(methodName: string, ...params: any[]) {
-        const messages = await fetch(`/hub/invoke/${methodName}`, {
+        const messagesResponse: InvokeMessagesResponse = await fetch(`/hub/invoke/${methodName}`, {
             method: 'POST',
             body: JSON.stringify({ params }),
         }).then(res => res.json());
-
-        if (Array.isArray(messages))
+        for (const { messageName, delay } of messagesResponse.messages)
         {
-            for (const { messageName, delay } of messages)
-            {
-                setTimeout(async () => {
-                    const response = await fetch(`/hub/invoke/${messageName}`, {
-                        method: 'POST'
-                    }).then(res => res.json());
+            setTimeout(async () => {
+                const response = await fetch(`/hub/invoke/${messageName}`, {
+                    method: 'POST'
+                }).then(res => res.json());
 
-                    this.triggerCallbacks(messageName, response);
-                }, delay);
-            }
-        }
-        else
-        {
-            console.error('Wrong format for response.');
+                this.triggerCallbacks(messageName, response);
+            }, delay);
         }
     }
 

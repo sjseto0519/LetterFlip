@@ -1,5 +1,5 @@
 import { autoinject } from 'aurelia-framework';
-import { SignalRService } from 'signalr-service';
+import { GameResponse, JoinGameResponse, SignalRService } from 'signalr-service';
 import { Router } from 'aurelia-router';
 
 @autoinject
@@ -18,9 +18,9 @@ export class JoinGame {
         
       }
     
-      private handleJoinedGame(gameId: string, otherPlayerName: string) {
-        this.gameId = gameId;
-        this.otherPlayerName = otherPlayerName;
+      private async handleJoinedGame(gameResponse: GameResponse) {
+        this.gameId = gameResponse.gameId;
+        this.otherPlayerName = gameResponse.playerName;
     
         if (this.playerName === this.otherPlayerName) {
           // Handle case where you are the only player
@@ -28,6 +28,9 @@ export class JoinGame {
         } else {
           // Handle case where another player is already waiting
           this.waitingForOpponent = false;
+
+          await this.transitionUi();
+
           this.router.navigateToRoute('game', {
             gameId: this.gameId,
             playerName: this.playerName,
@@ -37,16 +40,30 @@ export class JoinGame {
         }
       }
 
+      private async handlePlayerJoined(joinGameResponse: JoinGameResponse) {
+        // Handle case where another player is already waiting
+        this.waitingForOpponent = false;
+
+        await this.transitionUi();
+
+        this.router.navigateToRoute('game', {
+          gameId: this.gameId,
+          playerName: this.playerName,
+          otherPlayerName: joinGameResponse.playerName
+        });
+      }
+
   async attached() {
     await this.signalRService.startConnection();
     this.signalRService.addJoinedGameListener(this.handleJoinedGame.bind(this));
+    this.signalRService.addPlayerJoinedListener(this.handlePlayerJoined.bind(this));
 
     setTimeout(() => {
       this.isFlipped = true;
     }, 100);
   }
 
-  async joinGame() {
+  private async transitionUi() {
     this.isFlipped = false;
     this.hideInputs = true;
     // Trigger the animation by applying a class
@@ -54,15 +71,22 @@ export class JoinGame {
     this.inputGameId.classList.add('hide');
 
     // Hide the elements after the transition
-    setTimeout(() => {
-      this.inputUserName.style.display = 'none';
-      this.inputGameId.style.display = 'none';
-    }, 500);
+    return new Promise<void>((resolve) => {
+      setTimeout(() => {
+        this.inputUserName.style.display = 'none';
+        this.inputGameId.style.display = 'none';
+        resolve();
+      }, 500);
+    });
+  }
+
+  async joinGame() {
+
 
     // Ask server to join the game
-    //if (this.playerName && this.gameId)
-    //{
-    //  await this.signalRService.joinGame(this.playerName, this.gameId);
-    //}
+    if (this.playerName && this.gameId)
+    {
+      await this.signalRService.joinGame(this.playerName, this.gameId);
+    }
   }
 }

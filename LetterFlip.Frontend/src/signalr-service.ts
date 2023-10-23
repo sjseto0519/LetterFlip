@@ -1,12 +1,29 @@
-import * as signalR from "@microsoft/signalr";
+import { DualHubConnection, MessageType } from "dual-hub-connection";
+import { MockHubConnectionBuilder } from "mock-hub-connection-builder";
+import { DataType, RealHubConnectionBuilder } from "real-hub-connection-builder";
+
+export interface GameResponse {
+  gameId: string,
+  playerName: string
+}
+
+export interface JoinGameResponse {
+  playerName: string;
+}
+
+export interface CheckTileResponse {
+  gameId: string;
+  letter: string;
+  occurrences: number;
+}
 
 export class SignalRService {
-    private connection: signalR.HubConnection;
+    private connection: DualHubConnection;
   
     constructor() {
-      this.connection = new signalR.HubConnectionBuilder()
-        .withUrl("https://localhost:7213/gamehub") // replace with your hub endpoint
-        .build();
+      const mockConnectionBuilder = new MockHubConnectionBuilder();
+      const connectionBuilder = new RealHubConnectionBuilder("https://localhost:7213/gamehub");
+      this.connection = new DualHubConnection(mockConnectionBuilder);
     }
   
     public startConnection = async () => {
@@ -20,30 +37,20 @@ export class SignalRService {
     };
 
     public async joinGame(userName: string, gameId: string) {
-        await this.connection.invoke('JoinOrCreateGame', userName, gameId);
+        await this.connection.invoke(MessageType.JoinOrCreateGame, userName, gameId);
       }
 
-    public addJoinedGameListener(callback: (gameId: string, playerName: string) => void) {
-        this.connection.on("JoinedGame", callback);
+    public addJoinedGameListener(callback: (gameResponse: GameResponse) => void) {
+        this.connection.on(MessageType.JoinedGame, callback, DataType.GameResponse);
       }
 
-    public addPlayerJoinedListener(callback: (playerName: string) => void) {
-        this.connection.on("PlayerJoined", callback);
+    public addPlayerJoinedListener(callback: (joinGameResponse: JoinGameResponse) => void) {
+        this.connection.on(MessageType.PlayerJoined, callback, DataType.JoinGameResponse);
       }
 
     // Inside SignalRService
-    public onCheckTileResponse(callback: (gameId: string, letter: string, occurrences: number) => void) {
-        this.connection.on("CheckTileResponse", (result) => {
-            const data = JSON.parse(result);
-            callback(data.GameId, data.Letter, data.Occurrences);
-        });
+    public onCheckTileResponse(callback: (checkTileResponse: CheckTileResponse) => void) {
+        this.connection.on(MessageType.CheckTileResponse, callback, DataType.GameResponse);
     }
-  
-
-    public sendMessage = (messageType: string, gameId: string, message: string) => {
-        this.connection.invoke(messageType, gameId, message).catch((err) => {
-          return console.error(err.toString());
-        });
-      };
   }
   

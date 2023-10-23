@@ -2,17 +2,17 @@ import { HubConnectionBuilder, HubConnection } from '@microsoft/signalr';
 import { IHubConnectionBuilder } from 'interfaces/hub-connection-builder';
 
 export enum DataType {
-    User,
-    Message,
-    Timestamp
+    GameResponse,
+    JoinGameResponse,
+    CheckTileResponse
 }
 
 export class RealHubConnectionBuilder implements IHubConnectionBuilder {
     private hubConnection: HubConnection;
     private dataTypeMap: Map<DataType, string[]> = new Map([
-        [DataType.User, ['id', 'name']],
-        [DataType.Message, ['content', 'type']],
-        [DataType.Timestamp, ['time']]
+        [DataType.GameResponse, ['gameId', 'playerName']],
+        [DataType.JoinGameResponse, ['playerName']],
+        [DataType.CheckTileResponse, ['gameId', 'letter', 'occurrences']]
       ]);
 
     constructor(url: string) {
