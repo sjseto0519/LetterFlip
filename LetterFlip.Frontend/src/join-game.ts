@@ -9,6 +9,10 @@ export class JoinGame {
     otherPlayerName: string;
     gameId: string;
     waitingForOpponent: boolean = false; 
+    isFlipped: boolean = false;
+    hideInputs: boolean = false;
+    inputUserName: HTMLInputElement;
+    inputGameId: HTMLInputElement;
 
     constructor(private signalRService: SignalRService, private router: Router) {
         
@@ -36,10 +40,29 @@ export class JoinGame {
   async attached() {
     await this.signalRService.startConnection();
     this.signalRService.addJoinedGameListener(this.handleJoinedGame.bind(this));
+
+    setTimeout(() => {
+      this.isFlipped = true;
+    }, 100);
   }
 
   async joinGame() {
+    this.isFlipped = false;
+    this.hideInputs = true;
+    // Trigger the animation by applying a class
+    this.inputUserName.classList.add('hide');
+    this.inputGameId.classList.add('hide');
+
+    // Hide the elements after the transition
+    setTimeout(() => {
+      this.inputUserName.style.display = 'none';
+      this.inputGameId.style.display = 'none';
+    }, 500);
+
     // Ask server to join the game
-    await this.signalRService.joinGame(this.playerName, this.gameId);
+    //if (this.playerName && this.gameId)
+    //{
+    //  await this.signalRService.joinGame(this.playerName, this.gameId);
+    //}
   }
 }

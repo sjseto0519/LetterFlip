@@ -10,10 +10,12 @@ namespace LetterFlip.Backend.SignalR
         private readonly string currentWord = "EXAMPLE";
         private readonly Dictionary<string, string> waitingPlayers = new Dictionary<string, string>();
         private readonly IAdaptiveWordProvider adaptiveWordProvider;
+        private readonly IGameService gameService;
 
-        public GameHub(AdaptiveWordProvider adaptiveWordProvider)
+        public GameHub(IAdaptiveWordProvider adaptiveWordProvider, IGameService gameService)
         {
             this.adaptiveWordProvider = adaptiveWordProvider;
+            this.gameService = gameService;
         }
 
         public async Task CheckTile(string letter)
@@ -26,6 +28,16 @@ namespace LetterFlip.Backend.SignalR
 
         public async Task JoinOrCreateGame(string playerName, string gameId)
         {
+            if (string.IsNullOrWhiteSpace(playerName))
+            {
+                throw new ArgumentException("Player name cannot be empty.", nameof(playerName));
+            }
+
+            if (string.IsNullOrWhiteSpace(gameId))
+            {
+                throw new ArgumentException("Game ID cannot be empty.", nameof(gameId));
+            }
+
             if (waitingPlayers.ContainsKey(gameId))
             {
                 string otherPlayerName = waitingPlayers[gameId];
@@ -43,6 +55,36 @@ namespace LetterFlip.Backend.SignalR
                 await Clients.Caller.SendAsync("JoinedGame", gameId, playerName);
             }
         }
+
+        public async Task JoinOrCreateGame(string gameId)
+        {
+            var playerName = Context.User.Identity.Name;
+            var game = await _gameService.JoinOrCreateGameAsync(gameId, playerName);
+
+            if (string.IsNullOrEmpty(game.Player2Name))
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, gameId);
+                await Clients.Caller.SendAsync("WaitingForOpponent");
+            }
+            else
+            {
+                await Groups.AddToGroupAsync(Context.ConnectionId, gameId);
+                await Clients.Group(gameId).SendAsync("GameStarted", game);
+            }
+        }
+
+        public override Task OnConnectedAsync()
+        {
+            // Log or debug
+            return base.OnConnectedAsync();
+        }
+
+        public override Task OnDisconnectedAsync(Exception exception)
+        {
+            // Log or debug
+            return base.OnDisconnectedAsync(exception);
+        }
+
     }
 
 }

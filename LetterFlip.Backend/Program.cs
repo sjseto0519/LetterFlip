@@ -24,6 +24,7 @@ namespace LetterFlip.Backend
 
             builder.Services.AddSignalR();
             builder.Services.AddSingleton<IAdaptiveWordProvider, AdaptiveWordProvider>();
+            builder.Services.AddScoped<IGameService, GameService>();
 
             // For Identity
             builder.Services.AddIdentity<IdentityUser, IdentityRole>()
@@ -55,12 +56,11 @@ namespace LetterFlip.Backend
 
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll", builder =>
-                {
-                    builder.AllowAnyOrigin()
-                           .AllowAnyMethod()
-                           .AllowAnyHeader();
-                });
+                options.AddPolicy("AllowMyOrigin",
+                    builder => builder.WithOrigins("http://localhost:8080")
+                                       .AllowAnyHeader()
+                                       .AllowAnyMethod()
+                                       .AllowCredentials());
             });
 
 
@@ -84,6 +84,8 @@ namespace LetterFlip.Backend
 
             app.UseAuthentication();
             app.UseAuthorization();
+
+            app.UseCors("AllowMyOrigin");
 
             app.MapHub<GameHub>("/gamehub");
 

@@ -5,7 +5,7 @@ export class SignalRService {
   
     constructor() {
       this.connection = new signalR.HubConnectionBuilder()
-        .withUrl("/gamehub") // replace with your hub endpoint
+        .withUrl("https://localhost:7213/gamehub") // replace with your hub endpoint
         .build();
     }
   

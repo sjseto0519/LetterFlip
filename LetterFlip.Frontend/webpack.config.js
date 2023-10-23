@@ -21,6 +21,14 @@ const baseUrl = '/';
 const cssRules = [
   {
     loader: 'css-loader'
+  },
+  {
+    loader: 'postcss-loader', // Add this line
+    options: {
+      postcssOptions: {
+        config: path.resolve(__dirname, 'postcss.config.js'),
+      },
+    },
   }
 ];
 
@@ -45,6 +53,7 @@ module.exports = ({ production }, { analyze, hmr, port, host }) => ({
     app: [
       // Uncomment next line if you need to support IE11
       // 'promise-polyfill/src/polyfill',
+      'main.css',
       'aurelia-bootstrapper'
     ]
   },

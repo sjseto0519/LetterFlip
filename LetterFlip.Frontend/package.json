@@ -14,7 +14,10 @@
     "@microsoft/signalr": "^7.0.12",
     "aurelia-animator-css": "^1.0.4",
     "aurelia-bootstrapper": "^2.4.0",
-    "babylonjs": "^6.24.0"
+    "babylonjs": "^6.24.0",
+    "daisyui": "^3.9.3",
+    "postcss-loader": "^7.3.3",
+    "tailwindcss": "^3.3.3"
   },
   "devDependencies": {
     "@types/jest": "^29.5.2",
@@ -28,6 +31,7 @@
     "aurelia-pal-nodejs": "^2.0.0",
     "aurelia-testing": "^1.1.0",
     "aurelia-webpack-plugin": "^5.0.5",
+    "autoprefixer": "^10.4.16",
     "clean-webpack-plugin": "^4.0.0",
     "copy-webpack-plugin": "^11.0.0",
     "css-loader": "^6.8.1",

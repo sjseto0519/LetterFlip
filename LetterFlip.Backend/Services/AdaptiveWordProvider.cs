@@ -14,7 +14,7 @@ namespace LetterFlip.Backend.Services
         {
             // Read the sorted word list from the embedded resource
             var assembly = Assembly.GetExecutingAssembly();
-            using Stream stream = assembly.GetManifestResourceStream("LetterFlip.Backend.SortedScrabbleDictionary.json");
+            using Stream stream = assembly.GetManifestResourceStream("LetterFlip.Backend.Resources.SortedScrabbleDictionary.json");
             using StreamReader reader = new StreamReader(stream);
             string json = reader.ReadToEnd();
             sortedWords = JsonConvert.DeserializeObject<List<string>>(json);
