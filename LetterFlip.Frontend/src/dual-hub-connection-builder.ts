@@ -1,4 +1,5 @@
 import { IHubConnectionBuilder } from "interfaces/hub-connection-builder";
+import { DataType } from "real-hub-connection-builder";
 
 export class DualHubConnectionBuilder {
     constructor(private hubConnectionBuilder: IHubConnectionBuilder) {}
@@ -11,8 +12,8 @@ export class DualHubConnectionBuilder {
         return await this.hubConnectionBuilder.invoke(methodName, ...params);
     }
 
-    on<T>(methodName: string, callback: (data: T) => void) {
-        this.hubConnectionBuilder.on<T>(methodName, callback);
+    on<T>(methodName: string, callback: (data: T) => void, dataType: DataType) {
+        this.hubConnectionBuilder.on<T>(methodName, callback, dataType);
     }
 
     onReconnecting(callback: () => void) {
