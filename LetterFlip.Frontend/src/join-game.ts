@@ -8,9 +8,9 @@ export class JoinGame {
     playerName: string;
     otherPlayerName: string;
     gameId: string;
-    waitingForOpponent: boolean = false; 
-    isFlipped: boolean = false;
-    hideInputs: boolean = false;
+    waitingForOpponent = false; 
+    isFlipped = false;
+    hideInputs = false;
     inputUserName: HTMLInputElement;
     inputGameId: HTMLInputElement;
 

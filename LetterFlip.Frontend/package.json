@@ -48,6 +48,7 @@
     "json-loader": "^0.5.7",
     "mini-css-extract-plugin": "^2.7.6",
     "minimatch": "^5.1.2",
+    "msw": "^2.0.0",
     "promise-polyfill": "^8.3.0",
     "style-loader": "^3.3.3",
     "tree-kill": "^1.2.2",
@@ -114,5 +115,8 @@
       "text",
       "html"
     ]
+  },
+  "msw": {
+    "workerDirectory": "static"
   }
 }

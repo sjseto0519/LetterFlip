@@ -23,7 +23,8 @@
   },
   "include": [
     "src",
-    "test"
+    "test",
+    "mocks"
   ],
   "atom": {
     "rewriteTsconfig": false
