@@ -5,6 +5,7 @@ export enum MessageType {
     JoinOrCreateGame = "JoinOrCreateGame",
     JoinedGame = "JoinedGame",
     PlayerJoined = "PlayerJoined",
+    CheckTile = "CheckTile",
     CheckTileResponse = "CheckTileResponse"
   }
 

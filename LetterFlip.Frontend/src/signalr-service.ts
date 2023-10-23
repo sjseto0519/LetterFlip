@@ -40,6 +40,10 @@ export class SignalRService {
         await this.connection.invoke(MessageType.JoinOrCreateGame, userName, gameId);
       }
 
+    public async checkTile(letter: string, gameId: string) {
+      await this.connection.invoke(MessageType.CheckTile, letter, gameId);
+    }
+
     public addJoinedGameListener(callback: (gameResponse: GameResponse) => void) {
         this.connection.on(MessageType.JoinedGame, callback, DataType.GameResponse);
       }

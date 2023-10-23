@@ -1,3 +1,69 @@
 <template>
-    <canvas id="renderCanvas"></canvas>
+  <div class="bg-gradient-to-r from-green-400 to-blue-500 text-white p-4">
+    <div class="container mx-auto">
+      <div class="flex items-center justify-between">
+        <!-- Left: Title -->
+        <div class="text-lg font-semibold">
+          Letter<span class="flip-text text-blue-500">Flip</span>
+        </div>
+  
+        <!-- Center: Player Names -->
+        <div class="text-base">
+          ${playerName} vs ${otherPlayerName}
+        </div>
+  
+        <!-- Right: Buttons -->
+        <div class="space-x-4">
+          <button click.delegate="toggleHistory()" class="btn btn-accent">History</button>
+          <button click.delegate="toggleGuessLetterModal()" class="btn btn-accent">Guess a Letter</button>
+          <button click.delegate="toggleGuessWordModal()" class="btn btn-accent">Guess a Word</button>
+          <button class="btn btn-accent">Exit Game</button>
+        </div>
+      </div>
+    </div>
+  </div>  
+  <div class="drawer">
+    <input id="history-drawer" type="checkbox" class="drawer-toggle" checked.bind="showHistory"/>
+    <div class="drawer-content">
+      <canvas id="renderCanvas"></canvas>
+    </div>
+    <div class="drawer-side">
+      <label for="history-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
+      <ul class="menu p-4 w-80 min-h-full bg-base-200 text-base-content">
+        <li repeat.for="item of historyItems" class="hover:bg-gray-200 rounded p-2 text-center">
+          ${item}
+        </li>
+      </ul>
+    </div>
+  </div>  
+  <!-- Guess a Letter Modal -->
+<div class="modal modal-open" if.bind="showGuessLetterModal">
+  <div class="modal-box">
+    <h2 class="text-lg">Guess a Letter</h2>
+    <div class="flex space-x-2">
+      <input repeat.for="position of guessedPositions"
+             type="text" 
+             value.bind="guessedPositions[position]" 
+             placeholder="-" 
+             maxlength="1"
+             input.trigger="updateGuess(position, $event.target.value)"
+             class="input input-bordered w-8 text-center">
+    </div>
+    <div class="modal-action">
+      <button class="btn btn-primary" click.delegate="submitLetterGuess()">Submit Guess</button>
+      <button class="btn" click.delegate="toggleGuessLetterModal()">Close</button>
+    </div>
+  </div>
+</div>
+<!-- Guess a Word Modal -->
+<div class="modal modal-open" if.bind="showGuessWordModal">
+  <div class="modal-box">
+    <h2 class="text-lg">Guess a Word</h2>
+    <input type="text" value.bind="guessedWord" placeholder="Enter a word" class="input input-bordered">
+    <div class="modal-action">
+      <button class="btn btn-primary" click.delegate="submitWordGuess()">Submit Guess</button>
+      <button class="btn" click.delegate="toggleGuessWordModal()">Close</button>
+    </div>
+  </div>
+</div>
   </template>

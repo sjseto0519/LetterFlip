@@ -1,7 +1,7 @@
 import { MessageType } from 'dual-hub-connection'
 import { InvokeMessagesResponse } from 'mock-hub-connection-builder'
 import { http, HttpResponse } from 'msw'
-import { GameResponse, JoinGameResponse } from 'signalr-service'
+import { CheckTileResponse, GameResponse, JoinGameResponse } from 'signalr-service'
 
 export const handlers = [
     http.post('/hub/invoke/:postId', async ({ request, params, cookies }) => {
@@ -22,6 +22,27 @@ export const handlers = [
             ]
           };
           return HttpResponse.json(joinOrCreateGameResponse);
+        }
+        else if (postId === MessageType.CheckTile) {
+          const checkTileResponse: InvokeMessagesResponse = {
+            messages: [
+              {
+                messageName: MessageType.CheckTileResponse,
+                delay: 500
+              }
+            ]
+          };
+          return HttpResponse.json(checkTileResponse);
+        }
+        else if (postId === MessageType.CheckTileResponse)
+        {
+          const requestArray = requestBody as string[];
+          const checkTileResponse: CheckTileResponse = {
+            gameId: 'abc123',
+            letter: requestArray[0],
+            occurrences: 1
+          };
+          return HttpResponse.json(checkTileResponse);
         }
         else if (postId === MessageType.JoinedGame)
         {

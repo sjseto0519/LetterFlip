@@ -4,9 +4,10 @@ import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, MeshBuilder,
     PhysicsShapeType, Mesh, StandardMaterial, PBRMaterial, Texture, Color3, PhysicsBody, DirectionalLight, Angle, 
     DynamicTexture, Matrix, ActionManager, ExecuteCodeAction } from '@babylonjs/core';
 import { Tile } from 'tile';
-import { SignalRService } from 'signalr-service';
+import { CheckTileResponse, SignalRService } from 'signalr-service';
 import { autoinject } from 'aurelia-framework';
 import { DynamicTextureService } from 'dynamic-texture-service';
+import { Game } from 'game';
 
 export interface WallUnit {
     wall: Mesh;
@@ -31,22 +32,21 @@ export class BabylonService {
   private currentWord: string = "";
   private tiles: Tile[] = [];
   private selectedTile: Tile | null = null;
-  private gameId: string;
   private skybox: Mesh;
+  currentGame: Game;
 
   constructor(private dynamicTextureService: DynamicTextureService) {
     // Initialization logic here
   }
 
-  async initialize(canvas: HTMLCanvasElement, signalRService: SignalRService, gameId: string, playerName: string, otherPlayerName: string) {
-    this.gameId = gameId;
+  async initialize(canvas: HTMLCanvasElement, signalRService: SignalRService, playerName: string, otherPlayerName: string) {
     await this.setupEngineAndScene(canvas);
     await this.setupPhysics();
     this.setupCamera(canvas);
     this.setupLighting();
     this.setupSkybox();
     this.setupWalls();
-    this.setupTiles();
+    this.setupTiles(signalRService);
     this.setupOverlay();
     this.setupCallbacks(signalRService);
     
@@ -65,16 +65,16 @@ export class BabylonService {
 
   private setupCallbacks(signalRService: SignalRService)
   {
-    signalRService.onCheckTileResponse((gameId, letter, occurrences) => {
-      if (gameId !== this.gameId) {
+    signalRService.onCheckTileResponse((checkTileResponse: CheckTileResponse) => {
+      if (checkTileResponse.gameId !== this.currentGame.gameId) {
         return; // Ignore messages for other games
       }
     
-      if (this.selectedTile && this.selectedTile.letter === letter) {
-        if (occurrences === 0) {
+      if (this.selectedTile && this.selectedTile.letter === checkTileResponse.letter) {
+        if (checkTileResponse.occurrences === 0) {
           this.selectedTile.flip();
         } else {
-          this.selectedTile.addAsterisks(occurrences);
+          this.selectedTile.addAsterisks(checkTileResponse.occurrences);
         }
       }
     });
@@ -184,41 +184,41 @@ export class BabylonService {
     return { wall, wallBody };
   }
 
-  private setupTiles() {
+  private setupTiles(signalRService: SignalRService) {
     let adjust = 0.3;
-    this.setupTile("Q", new Vector3(-2.5 + adjust, 1, 0));
-    this.setupTile("W", new Vector3(-2 + adjust, 1, 0));
-    this.setupTile("E", new Vector3(-1.5 + adjust, 1, 0));
-    this.setupTile("R", new Vector3(-1 + adjust, 1, 0));
-    this.setupTile("T", new Vector3(-0.5 + adjust, 1, 0));
-    this.setupTile("Y", new Vector3(0 + adjust, 1, 0));
-    this.setupTile("U", new Vector3(0.5 + adjust, 1, 0));
-    this.setupTile("I", new Vector3(1.0 + adjust, 1, 0));
-    this.setupTile("O", new Vector3(1.5 + adjust, 1, 0));
-    this.setupTile("P", new Vector3(2 + adjust, 1, 0));
+    this.setupTile(signalRService, "Q", new Vector3(-2.5 + adjust, 1, 0));
+    this.setupTile(signalRService, "W", new Vector3(-2 + adjust, 1, 0));
+    this.setupTile(signalRService, "E", new Vector3(-1.5 + adjust, 1, 0));
+    this.setupTile(signalRService, "R", new Vector3(-1 + adjust, 1, 0));
+    this.setupTile(signalRService, "T", new Vector3(-0.5 + adjust, 1, 0));
+    this.setupTile(signalRService, "Y", new Vector3(0 + adjust, 1, 0));
+    this.setupTile(signalRService, "U", new Vector3(0.5 + adjust, 1, 0));
+    this.setupTile(signalRService, "I", new Vector3(1.0 + adjust, 1, 0));
+    this.setupTile(signalRService, "O", new Vector3(1.5 + adjust, 1, 0));
+    this.setupTile(signalRService, "P", new Vector3(2 + adjust, 1, 0));
 
     adjust = 0.0;
-    this.setupTile("A", new Vector3(-2 + adjust, 0, 0));
-    this.setupTile("S", new Vector3(-1.5 + adjust, 0, 0));
-    this.setupTile("D", new Vector3(-1 + adjust, 0, 0));
-    this.setupTile("F", new Vector3(-0.5 + adjust, 0, 0));
-    this.setupTile("G", new Vector3(0 + adjust, 0, 0));
-    this.setupTile("H", new Vector3(0.5 + adjust, 0, 0));
-    this.setupTile("J", new Vector3(1.0 + adjust, 0, 0));
-    this.setupTile("K", new Vector3(1.5 + adjust, 0, 0));
-    this.setupTile("L", new Vector3(2.0 + adjust, 0, 0));
+    this.setupTile(signalRService, "A", new Vector3(-2 + adjust, 0, 0));
+    this.setupTile(signalRService, "S", new Vector3(-1.5 + adjust, 0, 0));
+    this.setupTile(signalRService, "D", new Vector3(-1 + adjust, 0, 0));
+    this.setupTile(signalRService, "F", new Vector3(-0.5 + adjust, 0, 0));
+    this.setupTile(signalRService, "G", new Vector3(0 + adjust, 0, 0));
+    this.setupTile(signalRService, "H", new Vector3(0.5 + adjust, 0, 0));
+    this.setupTile(signalRService, "J", new Vector3(1.0 + adjust, 0, 0));
+    this.setupTile(signalRService, "K", new Vector3(1.5 + adjust, 0, 0));
+    this.setupTile(signalRService, "L", new Vector3(2.0 + adjust, 0, 0));
 
     adjust = 0.0;
-    this.setupTile("Z", new Vector3(-1.5 + adjust, -1, 0));
-    this.setupTile("X", new Vector3(-1 + adjust, -1, 0));
-    this.setupTile("C", new Vector3(-0.5 + adjust, -1, 0));
-    this.setupTile("V", new Vector3(0 + adjust, -1, 0));
-    this.setupTile("B", new Vector3(0.5 + adjust, -1, 0));
-    this.setupTile("N", new Vector3(1.0 + adjust, -1, 0));
-    this.setupTile("M", new Vector3(1.5 + adjust, -1, 0));
+    this.setupTile(signalRService, "Z", new Vector3(-1.5 + adjust, -1, 0));
+    this.setupTile(signalRService, "X", new Vector3(-1 + adjust, -1, 0));
+    this.setupTile(signalRService, "C", new Vector3(-0.5 + adjust, -1, 0));
+    this.setupTile(signalRService, "V", new Vector3(0 + adjust, -1, 0));
+    this.setupTile(signalRService, "B", new Vector3(0.5 + adjust, -1, 0));
+    this.setupTile(signalRService, "N", new Vector3(1.0 + adjust, -1, 0));
+    this.setupTile(signalRService, "M", new Vector3(1.5 + adjust, -1, 0));
   }
 
-  private setupTile(text: string, position: Vector3) {
+  private setupTile(signalRService: SignalRService, text: string, position: Vector3) {
     var pbrMaterial = new PBRMaterial("pbr", this.scene);
     pbrMaterial.roughness = 0.3; // Value between 0 and 1 to control roughness
     pbrMaterial.emissiveColor =  new Color3(0.3922, 0.5843, 0.9294);
@@ -255,7 +255,7 @@ export class BabylonService {
         ActionManager.OnPickTrigger,
         () => {
           this.selectedTile = tile;
-          tile.flip();
+          signalRService.checkTile(tile.letter, this.currentGame.gameId);
         }
       )
     );
