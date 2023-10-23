@@ -7,13 +7,11 @@ export class MockHubConnectionBuilder implements IHubConnectionBuilder {
     private reconnectedCallbacks: (() => void)[] = [];
     private closeCallbacks: (() => void)[] = [];
 
-    constructor(private configPath: string) {}
+    constructor() {}
 
     async start() {
-        const config = await fetch(this.configPath).then(res => res.json());
-        config.methods.forEach(method => {
-            this.callbacks[method.name] = method.callbacks || [];
-        });
+        // simulate initial startup time
+        await new Promise(resolve => setTimeout(resolve, 10));
     }
 
     async invoke(methodName: string, ...params: any[]) {
@@ -27,7 +25,7 @@ export class MockHubConnectionBuilder implements IHubConnectionBuilder {
             for (const { messageName, delay } of messages)
             {
                 setTimeout(async () => {
-                    const response = await fetch(`/${messageName}`, {
+                    const response = await fetch(`/hub/invoke/${messageName}`, {
                         method: 'POST'
                     }).then(res => res.json());
 
@@ -49,7 +47,7 @@ export class MockHubConnectionBuilder implements IHubConnectionBuilder {
     }
 
     onReconnecting(callback: () => void): void {
-        this.reconnectedCallbacks.push(callback);
+        this.reconnectingCallbacks.push(callback);
     }
 
     onReconnected(callback: () => void): void {
