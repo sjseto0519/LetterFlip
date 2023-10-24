@@ -19,11 +19,13 @@ export interface CheckTileResponse {
 
 export interface GuessLetterResponse {
   gameId: string;
+  letter: string;
   isCorrect: boolean;
 }
 
 export interface GuessWordResponse {
   gameId: string;
+  word: string;
   isCorrect: boolean;
 }
 

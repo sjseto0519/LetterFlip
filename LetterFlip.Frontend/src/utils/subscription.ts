@@ -2,16 +2,16 @@ import { EventHandler } from "./event-handler";
 import { Events } from "./events";
 import { ISubscription } from "./i-subscription";
 
-export class Subscription implements ISubscription {
+export class Subscription<TEvent extends Events, TData> implements ISubscription<TData> {
+  constructor(
+      public event: TEvent,
+      public handler: EventHandler<TData>,
+      public subscriber: object
+  ) {}
 
-    constructor(
-      public event: Events, 
-      public handler: EventHandler<any>,
-      public subscriber: any
-    ) {}
-  
-    unsubscribe = () => {
-      // Unsubscribe logic
-    }
-  
+  clear() {
+      this.event = null;
+      this.handler = null;
+      this.subscriber = null;
   }
+}

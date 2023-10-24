@@ -1,4 +1,4 @@
 export enum Events {
-    GuessLetter = '/guess/letter',
+    GuessLetterCorrect = '/guess/letter/correct',
     GuessWord = '/guess/word'
   }

@@ -1,17 +1,15 @@
 import { autoinject } from 'aurelia-framework';
 import { BabylonService } from "babylon-service";
-import { GuessLetterResponse, SignalRService } from 'signalr-service';
+import { GuessLetterResponse, GuessWordResponse, SignalRService } from 'signalr-service';
 import { Router } from 'aurelia-router';
 import { GameService } from 'game-service';
-import { EventAggregatorFactory } from 'utils/event-aggregator-factory';
+import { EventAggregatorRegistry } from 'utils/event-aggregator-registry';
 import { Events } from 'utils/events';
-import { GuessLetterEventData } from 'interfaces/event-data';
 
 @autoinject
 export class Game {
-  constructor(private babylonService: BabylonService, private signalRService: SignalRService, private gameService: GameService, private eventAggregatorFactory: EventAggregatorFactory, private router: Router) { 
+  constructor(private babylonService: BabylonService, private signalRService: SignalRService, private gameService: GameService, private eventAggregatorRegistry: EventAggregatorRegistry, private router: Router) { 
     babylonService.currentGame = this;
-    eventAggregatorFactory.get(Events.GuessLetter, GuessLetterEventData);
     this.guessedPositions = Array.from({ length: this.gameService.gameState.getYourPlayerState().currentWord.length }, () => '');
   }
 
@@ -94,6 +92,26 @@ export class Game {
     {
       this.gameService.nextTurn();
     }
+    else
+    {
+      this.eventAggregatorRegistry.guessLetterCorrectEventAggregator.publish(Events.GuessLetterCorrect, { letter: guessLetterResponse.letter })
+    }
 
+  }
+
+  private async handleGuessWord(guessWordResponse: GuessWordResponse) {
+    if (guessWordResponse.gameId !== this.gameService.gameState.gameId)
+    {
+      return;
+    }
+
+    if (!guessWordResponse.isCorrect)
+    {
+      this.gameService.nextTurn();
+    }
+    else
+    {
+      
+    }
   }
 }

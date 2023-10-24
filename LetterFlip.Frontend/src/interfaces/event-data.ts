@@ -1,7 +1,7 @@
-export interface GuessLetterEventData extends HasId {
+export interface GuessLetterCorrectEventData {
     letter: string;
 }
 
-export interface GuessWordEventData extends HasId {
+export interface GuessWordEventData {
     word: string;
 }

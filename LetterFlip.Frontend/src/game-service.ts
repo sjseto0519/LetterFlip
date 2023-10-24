@@ -13,6 +13,10 @@ export class GameService {
     this.gameState.currentTurn = this.gameState.currentTurn === 'player1' ? 'player2' : 'player1';
   }
 
+  nextWord() {
+    
+  }
+
   flipLetter(letter: string) {
     const playerState = this.gameState.getYourPlayerState();
     playerState.flippedTiles.push(letter);

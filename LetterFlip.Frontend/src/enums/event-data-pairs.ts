@@ -1,0 +1,4 @@
+enum EventDataPairs {
+    GuessLetterCorrectEvent,
+    GuessWordEvent
+  }
