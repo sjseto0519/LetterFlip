@@ -1,14 +1,16 @@
 import { autoinject } from 'aurelia-framework';
 import { BabylonService } from "babylon-service";
-import { SignalRService } from 'signalr-service';
+import { GuessLetterResponse, SignalRService } from 'signalr-service';
+import { Router } from 'aurelia-router';
+import { GameService } from 'game-service';
 
 @autoinject
 export class Game {
-  constructor(private babylonService: BabylonService, private signalRService: SignalRService) { 
+  constructor(private babylonService: BabylonService, private signalRService: SignalRService, private gameService: GameService, private router: Router) { 
     babylonService.currentGame = this;
+    this.guessedPositions = Array.from({ length: this.gameService.gameState.getYourPlayerState().currentWord.length }, () => '');
   }
 
-    gameId: string;
     playerName: string;
     otherPlayerName: string;
     showHistory = false;
@@ -17,8 +19,7 @@ export class Game {
     showGuessWordModal = false;
     guessedLetter = '';
     guessedWord = '';
-  currentWord = 'example'; // Replace with your actual current word
-  guessedPositions = Array.from({ length: this.currentWord.length }, () => '');
+  guessedPositions = [];
 
   toggleGuessLetterModal() {
     this.showGuessLetterModal = !this.showGuessLetterModal;
@@ -50,6 +51,7 @@ export class Game {
       if (this.guessedWord) {
         this.historyItems.push(`Guessed the word ${this.guessedWord}`);
       }
+      this.signalRService.guessWord(this.guessedWord, this.gameService.gameState.yourPlayerIndex, this.gameService.gameState.gameId);
       this.toggleGuessWordModal();
     }
 
@@ -57,11 +59,15 @@ export class Game {
     this.showHistory = !this.showHistory;
   }
 
+  exitGame() {
+    this.router.navigateToRoute('join-game');
+  }
+
   activate(params) {
     // Do something with the router parameters
     let { gameId, playerName, otherPlayerName } = params;
     // Initialize any class properties based on these
-    this.gameId = gameId;
+    this.gameService.gameState.gameId = gameId;
     this.playerName = playerName;
     this.otherPlayerName = otherPlayerName;
   }
@@ -71,5 +77,18 @@ export class Game {
     canvas.width = window.innerWidth - 40;
     canvas.height = window.innerHeight - 40;
     this.babylonService.initialize(canvas, this.signalRService, this.playerName, this.otherPlayerName);
+  }
+
+  private async handleGuessLetter(guessLetterResponse: GuessLetterResponse) {
+    if (guessLetterResponse.gameId !== this.gameService.gameState.gameId)
+    {
+      return;
+    }
+
+    if (!guessLetterResponse.isCorrect)
+    {
+      this.gameService.nextTurn();
+    }
+
   }
 }

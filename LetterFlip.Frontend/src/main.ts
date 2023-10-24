@@ -4,6 +4,8 @@ import {PLATFORM} from 'aurelia-pal';
 import { BabylonService } from 'babylon-service';
 import { SignalRService } from 'signalr-service';
 import { startWorker } from '../mocks/browser';
+import { DynamicTextureService } from 'dynamic-texture-service';
+import { GameService } from 'game-service';
 
 export function configure(aurelia: Aurelia): void {
   aurelia.use
@@ -21,6 +23,8 @@ export function configure(aurelia: Aurelia): void {
   // Register BabylonService
   aurelia.container.registerSingleton(BabylonService);
   aurelia.container.registerSingleton(SignalRService);
+  aurelia.container.registerSingleton(DynamicTextureService);
+  aurelia.container.registerSingleton(GameService);
 
   aurelia.start().then(() => aurelia.setRoot(PLATFORM.moduleName('app')));
 }

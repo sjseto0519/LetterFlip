@@ -8,6 +8,7 @@ import { CheckTileResponse, SignalRService } from 'signalr-service';
 import { autoinject } from 'aurelia-framework';
 import { DynamicTextureService } from 'dynamic-texture-service';
 import { Game } from 'game';
+import { GameService } from 'game-service';
 
 export interface WallUnit {
     wall: Mesh;
@@ -29,13 +30,12 @@ export class BabylonService {
   private camera: ArcRotateCamera;
   private display: HolographicButton;
   private text: TextBlock;
-  private currentWord: string = "";
   private tiles: Tile[] = [];
   private selectedTile: Tile | null = null;
   private skybox: Mesh;
   currentGame: Game;
 
-  constructor(private dynamicTextureService: DynamicTextureService) {
+  constructor(private dynamicTextureService: DynamicTextureService, private gameService: GameService) {
     // Initialization logic here
   }
 
@@ -53,7 +53,7 @@ export class BabylonService {
     this.engine.runRenderLoop(() => {
         // Update the skybox position to match the camera's position
         this.skybox.position = this.camera.position;
-        this.text.text = `Current Word:\n${this.currentWord}`;
+        this.text.text = `${this.gameService.gameState.currentPlayerName()}'s Turn\nCurrent Word:\n${this.gameService.gameState.getOpponentPlayerState().currentWord}`;
   
         if (this.selectedTile) {
           this.selectedTile.update();
@@ -66,12 +66,13 @@ export class BabylonService {
   private setupCallbacks(signalRService: SignalRService)
   {
     signalRService.onCheckTileResponse((checkTileResponse: CheckTileResponse) => {
-      if (checkTileResponse.gameId !== this.currentGame.gameId) {
+      if (checkTileResponse.gameId !== this.gameService.gameState.gameId) {
         return; // Ignore messages for other games
       }
     
       if (this.selectedTile && this.selectedTile.letter === checkTileResponse.letter) {
         if (checkTileResponse.occurrences === 0) {
+          this.gameService.flipLetter(checkTileResponse.letter);
           this.selectedTile.flip();
         } else {
           this.selectedTile.addAsterisks(checkTileResponse.occurrences);
@@ -255,7 +256,11 @@ export class BabylonService {
         ActionManager.OnPickTrigger,
         () => {
           this.selectedTile = tile;
-          signalRService.checkTile(tile.letter, this.currentGame.gameId);
+          if (!this.gameService.gameState.isYourTurn())
+          {
+            return;
+          }
+          signalRService.checkTile(tile.letter, this.gameService.gameState.yourPlayerIndex, this.gameService.gameState.gameId);
         }
       )
     );

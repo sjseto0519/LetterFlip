@@ -3,10 +3,15 @@ import { DataType } from "real-hub-connection-builder";
 
 export enum MessageType {
     JoinOrCreateGame = "JoinOrCreateGame",
+    CreatedGame = "CreatedGame",
     JoinedGame = "JoinedGame",
     PlayerJoined = "PlayerJoined",
     CheckTile = "CheckTile",
-    CheckTileResponse = "CheckTileResponse"
+    CheckTileResponse = "CheckTileResponse",
+    GuessLetter = "GuessLetter",
+    GuessLetterResponse = "GuessLetterResponse",
+    GuessWord = "GuessWord",
+    GuessWordResponse = "GuessWordResponse"
   }
 
 export class DualHubConnection {

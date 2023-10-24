@@ -1,6 +1,7 @@
 import { autoinject } from 'aurelia-framework';
 import { GameResponse, JoinGameResponse, SignalRService } from 'signalr-service';
 import { Router } from 'aurelia-router';
+import { GameService } from 'game-service';
 
 @autoinject
 export class JoinGame {
@@ -14,30 +15,31 @@ export class JoinGame {
     inputUserName: HTMLInputElement;
     inputGameId: HTMLInputElement;
 
-    constructor(private signalRService: SignalRService, private router: Router) {
+    constructor(private signalRService: SignalRService, private router: Router, private gameService: GameService) {
         
       }
     
+      private async handleCreatedGame(gameResponse: GameResponse) {
+        this.gameId = gameResponse.gameId;
+          this.waitingForOpponent = true;
+      }
+
       private async handleJoinedGame(gameResponse: GameResponse) {
         this.gameId = gameResponse.gameId;
         this.otherPlayerName = gameResponse.playerName;
     
-        if (this.playerName === this.otherPlayerName) {
-          // Handle case where you are the only player
-          this.waitingForOpponent = true;
-        } else {
-          // Handle case where another player is already waiting
-          this.waitingForOpponent = false;
+        // Handle case where another player is already waiting
+        this.waitingForOpponent = false;
 
-          await this.transitionUi();
+        await this.transitionUi();
 
-          this.router.navigateToRoute('game', {
-            gameId: this.gameId,
-            playerName: this.playerName,
-            otherPlayerName: this.otherPlayerName
-          });
-          
-        }
+        this.gameService.newGame(this.gameId, 1, this.playerName, this.otherPlayerName);
+
+        this.router.navigateToRoute('game', {
+          gameId: this.gameId,
+          playerName: this.playerName,
+          otherPlayerName: this.otherPlayerName
+        });
       }
 
       private async handlePlayerJoined(joinGameResponse: JoinGameResponse) {
@@ -45,6 +47,8 @@ export class JoinGame {
         this.waitingForOpponent = false;
 
         await this.transitionUi();
+
+        this.gameService.newGame(this.gameId, 0, this.playerName, joinGameResponse.playerName);
 
         this.router.navigateToRoute('game', {
           gameId: this.gameId,
@@ -55,6 +59,7 @@ export class JoinGame {
 
   async attached() {
     await this.signalRService.startConnection();
+    this.signalRService.addCreatedGameListener(this.handleCreatedGame.bind(this));
     this.signalRService.addJoinedGameListener(this.handleJoinedGame.bind(this));
     this.signalRService.addPlayerJoinedListener(this.handlePlayerJoined.bind(this));
 

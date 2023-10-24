@@ -5,23 +5,38 @@ import { CheckTileResponse, GameResponse, JoinGameResponse } from 'signalr-servi
 
 export const handlers = [
     http.post('/hub/invoke/:postId', async ({ request, params, cookies }) => {
+
+        const scenarioIndex = 0;
+
         const { postId } = params
         const requestBody = await request.json()
 
         if (postId === MessageType.JoinOrCreateGame) {
-          const joinOrCreateGameResponse: InvokeMessagesResponse = {
-            messages: [
-              {
-                messageName: MessageType.JoinedGame,
-                delay: 500
-              },
-              {
-                messageName: MessageType.PlayerJoined,
-                delay: 5000
-              }
-            ]
-          };
-          return HttpResponse.json(joinOrCreateGameResponse);
+          if (scenarioIndex === 0) {
+            const joinOrCreateGameResponse: InvokeMessagesResponse = {
+              messages: [
+                {
+                  messageName: MessageType.CreatedGame,
+                  delay: 500
+                },
+                {
+                  messageName: MessageType.PlayerJoined,
+                  delay: 5000
+                }
+              ]
+            };
+            return HttpResponse.json(joinOrCreateGameResponse);
+          } else if (scenarioIndex === 1) {
+            const joinOrCreateGameResponse: InvokeMessagesResponse = {
+              messages: [
+                {
+                  messageName: MessageType.JoinedGame,
+                  delay: 500
+                }
+              ]
+            };
+            return HttpResponse.json(joinOrCreateGameResponse);
+          }
         }
         else if (postId === MessageType.CheckTile) {
           const checkTileResponse: InvokeMessagesResponse = {
@@ -44,11 +59,19 @@ export const handlers = [
           };
           return HttpResponse.json(checkTileResponse);
         }
-        else if (postId === MessageType.JoinedGame)
+        else if (postId === MessageType.CreatedGame)
         {
           const gameResponse: GameResponse = {
             gameId: 'abc123',
             playerName: 'MyPlayerOne'
+          }
+          return HttpResponse.json(gameResponse);
+        }
+        else if (postId === MessageType.JoinedGame)
+        {
+          const gameResponse: GameResponse = {
+            gameId: 'abc123',
+            playerName: 'MyPlayerTwo'
           }
           return HttpResponse.json(gameResponse);
         }
