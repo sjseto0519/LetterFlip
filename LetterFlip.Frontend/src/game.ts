@@ -21,6 +21,7 @@ export class Game {
     showGuessWordModal = false;
     guessedLetter = '';
     guessedWord = '';
+    guessedPosition = 0;
   guessedPositions = [];
 
   toggleGuessLetterModal() {
@@ -34,6 +35,7 @@ export class Game {
     // Update the selected position
     this.guessedPositions[position] = value;
 
+    this.guessedPosition = position;
     // Trigger a view update (Aurelia should handle this automatically, but just to be explicit)
   }
 
@@ -42,6 +44,7 @@ export class Game {
     if (guessedLetter) {
       this.historyItems.push(`Guessed the letter ${guessedLetter}`);
     }
+    this.signalRService.guessLetter(guessedLetter, this.guessedPosition, this.gameService.gameState.yourPlayerIndex, this.gameService.gameState.gameId);
     this.toggleGuessLetterModal();
   }
 
@@ -73,6 +76,7 @@ export class Game {
     this.playerName = playerName;
     this.otherPlayerName = otherPlayerName;
     this.signalRService.onGuessLetterResponse(this.handleGuessLetter);
+    this.signalRService.onGuessWordResponse(this.handleGuessWord);
   }
 
   attached() {
@@ -111,7 +115,7 @@ export class Game {
     }
     else
     {
-      
+
     }
   }
 }

@@ -1,12 +1,14 @@
 import { MessageType } from 'dual-hub-connection'
 import { InvokeMessagesResponse } from 'mock-hub-connection-builder'
 import { http, HttpResponse } from 'msw'
-import { CheckTileResponse, GameResponse, JoinGameResponse } from 'signalr-service'
+import { CheckTileResponse, GameResponse, GuessLetterResponse, GuessWordResponse, JoinGameResponse } from 'signalr-service'
 
 export const handlers = [
     http.post('/hub/invoke/:postId', async ({ request, params, cookies }) => {
 
+        const gameId = "abc123";
         const scenarioIndex = 0;
+        const guessLetterScenarioIndex = 0;
 
         const { postId } = params
         const requestBody = await request.json()
@@ -38,6 +40,48 @@ export const handlers = [
             return HttpResponse.json(joinOrCreateGameResponse);
           }
         }
+        else if (postId === MessageType.GuessLetter) {
+          const guessLetterResponse: InvokeMessagesResponse = {
+            messages: [
+              {
+                messageName: MessageType.GuessLetterResponse,
+                delay: 500
+              }
+            ]
+          };
+          return HttpResponse.json(guessLetterResponse);
+        }
+        else if (postId === MessageType.GuessLetterResponse)
+        {
+          const requestArray = requestBody as string[];
+          const guessLetterResponse: GuessLetterResponse = {
+            gameId,
+            letter: requestArray[0],
+            isCorrect: guessLetterScenarioIndex === 0 ? true : false
+          };
+          return HttpResponse.json(guessLetterResponse);
+        }
+        else if (postId === MessageType.GuessWord) {
+          const guessWordResponse: InvokeMessagesResponse = {
+            messages: [
+              {
+                messageName: MessageType.GuessWordResponse,
+                delay: 500
+              }
+            ]
+          };
+          return HttpResponse.json(guessWordResponse);
+        }
+        else if (postId === MessageType.GuessWordResponse)
+        {
+          const requestArray = requestBody as string[];
+          const guessWordResponse: GuessWordResponse = {
+            gameId,
+            word: requestArray[0],
+            isCorrect: guessLetterScenarioIndex === 0 ? true : false
+          };
+          return HttpResponse.json(guessWordResponse);
+        }
         else if (postId === MessageType.CheckTile) {
           const checkTileResponse: InvokeMessagesResponse = {
             messages: [
@@ -53,7 +97,7 @@ export const handlers = [
         {
           const requestArray = requestBody as string[];
           const checkTileResponse: CheckTileResponse = {
-            gameId: 'abc123',
+            gameId,
             letter: requestArray[0],
             occurrences: 1
           };
@@ -62,7 +106,7 @@ export const handlers = [
         else if (postId === MessageType.CreatedGame)
         {
           const gameResponse: GameResponse = {
-            gameId: 'abc123',
+            gameId,
             playerName: 'MyPlayerOne'
           }
           return HttpResponse.json(gameResponse);
@@ -70,7 +114,7 @@ export const handlers = [
         else if (postId === MessageType.JoinedGame)
         {
           const gameResponse: GameResponse = {
-            gameId: 'abc123',
+            gameId,
             playerName: 'MyPlayerTwo'
           }
           return HttpResponse.json(gameResponse);
