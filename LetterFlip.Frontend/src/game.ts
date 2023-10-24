@@ -3,11 +3,15 @@ import { BabylonService } from "babylon-service";
 import { GuessLetterResponse, SignalRService } from 'signalr-service';
 import { Router } from 'aurelia-router';
 import { GameService } from 'game-service';
+import { EventAggregatorFactory } from 'utils/event-aggregator-factory';
+import { Events } from 'utils/events';
+import { GuessLetterEventData } from 'interfaces/event-data';
 
 @autoinject
 export class Game {
-  constructor(private babylonService: BabylonService, private signalRService: SignalRService, private gameService: GameService, private router: Router) { 
+  constructor(private babylonService: BabylonService, private signalRService: SignalRService, private gameService: GameService, private eventAggregatorFactory: EventAggregatorFactory, private router: Router) { 
     babylonService.currentGame = this;
+    eventAggregatorFactory.get(Events.GuessLetter, GuessLetterEventData);
     this.guessedPositions = Array.from({ length: this.gameService.gameState.getYourPlayerState().currentWord.length }, () => '');
   }
 
@@ -65,11 +69,12 @@ export class Game {
 
   activate(params) {
     // Do something with the router parameters
-    let { gameId, playerName, otherPlayerName } = params;
+    const { gameId, playerName, otherPlayerName } = params;
     // Initialize any class properties based on these
     this.gameService.gameState.gameId = gameId;
     this.playerName = playerName;
     this.otherPlayerName = otherPlayerName;
+    this.signalRService.onGuessLetterResponse(this.handleGuessLetter);
   }
 
   attached() {

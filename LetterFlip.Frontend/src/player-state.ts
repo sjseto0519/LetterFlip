@@ -1,5 +1,6 @@
 export class PlayerState {
-    public currentWord: string = '';
+    public currentWord = '';
     public flippedTiles: string[] = [];
-    public currentDifficulty: number = 0;
+    public wordView: string[] = [];
+    public currentDifficulty = 0;
 }

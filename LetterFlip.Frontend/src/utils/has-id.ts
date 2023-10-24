@@ -1,0 +1,3 @@
+interface HasId {
+    id: string; 
+}

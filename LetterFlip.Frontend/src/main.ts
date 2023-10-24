@@ -6,6 +6,7 @@ import { SignalRService } from 'signalr-service';
 import { startWorker } from '../mocks/browser';
 import { DynamicTextureService } from 'dynamic-texture-service';
 import { GameService } from 'game-service';
+import { EventAggregatorFactory } from 'utils/event-aggregator-factory';
 
 export function configure(aurelia: Aurelia): void {
   aurelia.use
@@ -25,6 +26,7 @@ export function configure(aurelia: Aurelia): void {
   aurelia.container.registerSingleton(SignalRService);
   aurelia.container.registerSingleton(DynamicTextureService);
   aurelia.container.registerSingleton(GameService);
+  aurelia.container.registerSingleton(EventAggregatorFactory);
 
   aurelia.start().then(() => aurelia.setRoot(PLATFORM.moduleName('app')));
 }
