@@ -72,6 +72,8 @@ export class Game {
   }
 
   playNewGame() {
+    this.historyItems = [];
+    this.gameService.newGame(this.gameService.gameState.gameId, this.gameService.gameState.yourPlayerIndex === 0 ? 1 : 0, this.playerName, this.otherPlayerName);
     this.toggleGameOverModal();
   }
 
