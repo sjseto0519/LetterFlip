@@ -31,6 +31,7 @@ export interface GuessWordResponse {
 
 export interface OpponentGuessedWordCorrectlyResponse {
   gameId: string;
+  word: string;
   newWord: string;
   isGameOver: boolean;
 }
@@ -38,8 +39,27 @@ export interface OpponentGuessedWordCorrectlyResponse {
 export interface OpponentGuessedLetterCorrectlyResponse {
   gameId: string;
   letter: string;
+  position: number;
   newWordView: string[];
   isGameOver: boolean;
+}
+
+export interface OpponentGuessedWordIncorrectlyResponse {
+  gameId: string;
+  word: string;
+  newWord: string;
+}
+
+export interface OpponentGuessedLetterIncorrectlyResponse {
+  gameId: string;
+  letter: string;
+  position: number;
+}
+
+export interface OpponentCheckedTileResponse {
+  gameId: string;
+  letter: string;
+  isCorrect: string;
 }
 
 export class SignalRService {
@@ -108,6 +128,18 @@ export class SignalRService {
 
     public onOpponentGuessedLetterCorrectlyResponse(callback: (opponentGuessedLetterCorrectlyResponse: OpponentGuessedLetterCorrectlyResponse) => void) {
       this.connection.on(MessageType.OpponentGuessedLetterCorrect, callback, DataType.OpponentGuessedLetterCorrectlyResponse);
+    }
+
+    public onOpponentGuessedWordIncorrectlyResponse(callback: (opponentGuessedWordIncorrectlyResponse: OpponentGuessedWordIncorrectlyResponse) => void) {
+      this.connection.on(MessageType.OpponentGuessedWordIncorrect, callback, DataType.OpponentGuessedWordIncorrectlyResponse);
+    }
+
+    public onOpponentGuessedLetterIncorrectlyResponse(callback: (opponentGuessedLetterIncorrectlyResponse: OpponentGuessedLetterIncorrectlyResponse) => void) {
+      this.connection.on(MessageType.OpponentGuessedLetterIncorrect, callback, DataType.OpponentGuessedLetterIncorrectlyResponse);
+    }
+
+    public onOpponentCheckedTileResponse(callback: (opponentCheckedTileResponse: OpponentCheckedTileResponse) => void) {
+      this.connection.on(MessageType.OpponentCheckedTile, callback, DataType.OpponentCheckedTileResponse);
     }
   }
   

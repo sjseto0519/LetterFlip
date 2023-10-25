@@ -168,16 +168,6 @@ export class BabylonService {
   private createWall(position: Vector3, width: number, height: number, depth: number, alpha: number): WallUnit {
     const wall = MeshBuilder.CreateBox("wall", { width, height, depth }, this.scene);
     wall.position = position;
-
-    // const wallMaterial = new StandardMaterial("wallMaterial", this.scene);
-    // const stoneTexture = new Texture("/textures/sandstone-brick_base_4k.jpg", this.scene);
-    // wallMaterial.diffuseTexture = stoneTexture;
-    // wallMaterial.diffuseColor = new Color3(0.749, 0.651, 0.454);
-    // wallMaterial.emissiveColor = new Color3(0.3922, 0.5843, 0.9294);
-    // wallMaterial.useEmissiveAsIllumination = true;
-    // wallMaterial.alpha = alpha;
-    // wall.material = wallMaterial;
-
     wall.material = this.dynamicTextureService.toWallMaterial({name: "sandstone-brick_base_4k", alpha, width: 1024, height: 512, flip: false});
   
     const wallAggregate = new PhysicsAggregate(wall, PhysicsShapeType.BOX, { mass: 0 }, this.scene);

@@ -1,6 +1,6 @@
 import { autoinject } from 'aurelia-framework';
 import { BabylonService } from "babylon-service";
-import { GuessLetterResponse, GuessWordResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedWordCorrectlyResponse, SignalRService } from 'signalr-service';
+import { GuessLetterResponse, GuessWordResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SignalRService } from 'signalr-service';
 import { Router } from 'aurelia-router';
 import { GameService } from 'game-service';
 import { Events } from 'utils/events';
@@ -49,7 +49,7 @@ export class Game {
   submitLetterGuess() {
     const guessedLetter = this.guessedPositions.find(Boolean);
     if (guessedLetter) {
-      this.historyItems.push(`Guessed the letter ${guessedLetter}`);
+      this.historyItems.push(`Guessed the letter ${guessedLetter} at position ${this.guessedPosition + 1}`);
     }
     this.signalRService.guessLetter(guessedLetter, this.guessedPosition, this.gameService.gameState.yourPlayerIndex, this.gameService.gameState.gameId);
     this.toggleGuessLetterModal();
@@ -88,7 +88,11 @@ export class Game {
     this.otherPlayerName = otherPlayerName;
     this.signalRService.onGuessLetterResponse(this.handleGuessLetter);
     this.signalRService.onGuessWordResponse(this.handleGuessWord);
+    this.signalRService.onOpponentGuessedLetterCorrectlyResponse(this.handleOpponentGuessLetterCorrectly);
     this.signalRService.onOpponentGuessedWordCorrectlyResponse(this.handleOpponentGuessWordCorrectly);
+    this.signalRService.onOpponentCheckedTileResponse(this.handleOpponentCheckedTile);
+    this.signalRService.onOpponentGuessedLetterIncorrectlyResponse(this.handleOpponentGuessLetterIncorrectly);
+    this.signalRService.onOpponentGuessedWordIncorrectlyResponse(this.handleOpponentGuessWordIncorrectly);
   }
 
   attached() {
@@ -116,6 +120,22 @@ export class Game {
 
   }
 
+  private async handleOpponentCheckedTile(opponentCheckedTileResponse: OpponentCheckedTileResponse) {
+    if (opponentCheckedTileResponse.gameId !== this.gameService.gameState.gameId) 
+    {
+      return;
+    }
+    if (!opponentCheckedTileResponse.isCorrect)
+    {
+      this.historyItems.push('Opponent correctly guessed letter ' + opponentCheckedTileResponse.letter);
+      this.gameService.nextTurn();
+    }
+    else
+    {
+      this.historyItems.push('Opponent incorrectly guessed letter ' + opponentCheckedTileResponse.letter);
+    }
+  }
+
   private async handleGuessWord(guessWordResponse: GuessWordResponse) {
     if (guessWordResponse.gameId !== this.gameService.gameState.gameId)
     {
@@ -133,11 +153,22 @@ export class Game {
     }
   }
 
+  private async handleOpponentGuessLetterIncorrectly(opponentGuessedLetterIncorrectlyResponse: OpponentGuessedLetterIncorrectlyResponse) {
+    if (opponentGuessedLetterIncorrectlyResponse.gameId !== this.gameService.gameState.gameId) {
+      return;
+    }
+
+    this.historyItems.push('Opponent incorrectly guessed letter ' + opponentGuessedLetterIncorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterIncorrectlyResponse.position + 1));
+    this.gameService.nextTurn();
+  }
+
   private async handleOpponentGuessLetterCorrectly(opponentGuessedLetterCorrectlyResponse: OpponentGuessedLetterCorrectlyResponse) {
     if (opponentGuessedLetterCorrectlyResponse.gameId !== this.gameService.gameState.gameId)
     {
       return;
     }
+
+    this.historyItems.push('Opponent correctly guessed the letter ' + opponentGuessedLetterCorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterCorrectlyResponse.position + 1));
 
     if (opponentGuessedLetterCorrectlyResponse.isGameOver) {
       this.winner = this.gameService.gameState.yourPlayerIndex === 0 ? 'player2' : 'player1';
@@ -146,9 +177,18 @@ export class Game {
       this.eventAggregator.publish(Events.GameOver, data);
     }
     else if (opponentGuessedLetterCorrectlyResponse.letter) {
-      var opponentGameState = this.gameService.gameState.getOpponentPlayerState();
+      const opponentGameState = this.gameService.gameState.getOpponentPlayerState();
       opponentGameState.wordView = opponentGuessedLetterCorrectlyResponse.newWordView;
     }
+  }
+
+  private async handleOpponentGuessWordIncorrectly(opponentGuessedWordIncorrectlyResponse: OpponentGuessedWordIncorrectlyResponse) {
+    if (opponentGuessedWordIncorrectlyResponse.gameId !== this.gameService.gameState.gameId) {
+      return;
+    }
+
+    this.historyItems.push('Opponent incorrectly guessed word ' + opponentGuessedWordIncorrectlyResponse.word);
+    this.gameService.nextTurn();
   }
 
   private async handleOpponentGuessWordCorrectly(opponentGuessedWordCorrectlyResponse: OpponentGuessedWordCorrectlyResponse) {
@@ -157,6 +197,8 @@ export class Game {
       return;
     }
 
+    this.historyItems.push('Opponent correctly guessed the word ' + opponentGuessedWordCorrectlyResponse.word);
+
     if (opponentGuessedWordCorrectlyResponse.isGameOver) {
       this.winner = this.gameService.gameState.yourPlayerIndex === 0 ? 'player2' : 'player1';
       this.toggleGameOverModal();
@@ -164,7 +206,7 @@ export class Game {
       this.eventAggregator.publish(Events.GameOver, data);
     }
     else if (opponentGuessedWordCorrectlyResponse.newWord) {
-      var opponentGameState = this.gameService.gameState.getOpponentPlayerState();
+      const opponentGameState = this.gameService.gameState.getOpponentPlayerState();
       opponentGameState.currentWord = opponentGuessedWordCorrectlyResponse.newWord;
       opponentGameState.currentDifficulty = opponentGuessedWordCorrectlyResponse.newWord.length;
       const data: OpponentGuessedWordCorrectlyEventData = { newWord: opponentGuessedWordCorrectlyResponse.newWord };
