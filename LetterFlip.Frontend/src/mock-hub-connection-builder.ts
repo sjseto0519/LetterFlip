@@ -25,8 +25,10 @@ export class MockHubConnectionBuilder implements IHubConnectionBuilder {
         {
             setTimeout(async () => {
                 const response = await fetch(`/hub/invoke/${messageName}`, {
-                    method: 'POST'
-                }).then(res => res.json());
+                    method: 'POST',
+                    body: "{}"
+                })
+                .then(res => res.json());
 
                 this.triggerCallbacks(messageName, response);
             }, delay);

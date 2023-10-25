@@ -1,16 +1,19 @@
 <template>
     <div class="flex flex-col items-center justify-center min-h-screen bg-gradient-to-r from-green-400 to-blue-500">
       <div class="card w-1/2">
-        <div class="card-title">
-          <h1 class="text-3xl font-semibold">Letter<span class="flip-text text-blue-500" css="transform: ${isFlipped ? 'rotate(180deg)' : 'rotate(0deg)'}">Flip</span></h1>
+        <div class="card-title grid">
+          <div class="flex flex-col items-center justify-self-center h-[17rem] justify-evenly">
+            <img width="160" src="/static/favicon.png" />
+            <h1 class="text-3xl font-semibold">Letter<span class="flip-text text-blue-500" css="transform: ${isFlipped ? 'rotate(180deg)' : 'rotate(0deg)'}">Flip</span></h1>
+          </div>
         </div>
-        <div class="card-body">
+        <div class="card-body p-1">
           <h2 class="text-2xl mb-4">Join a Game</h2>
           <div if.bind="waitingForOpponent" class="mb-4 text-lg text-red-600">
             (Waiting for opponent)
           </div>
           <div class="flex justify-center overflow-hidden">
-            <input ref="inputUserName" class="input input-bordered w-full mb-4 shadow-md animate-input" type="text" value.bind="userName" placeholder="Enter User Name">
+            <input ref="inputUserName" class="input input-bordered w-full mb-4 shadow-md animate-input" type="text" value.bind="playerName" placeholder="Enter User Name">
           </div>
           <div class="flex justify-center overflow-hidden">
             <input ref="inputGameId" class="input input-bordered w-full mb-4 shadow-md animate-input" type="text" value.bind="gameId" placeholder="Enter Game ID">
@@ -22,7 +25,7 @@
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
-            Join Game</button>
+            Play</button>
         </div>
       </div>
     </div>
