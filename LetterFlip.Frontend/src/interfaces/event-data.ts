@@ -17,3 +17,11 @@ export interface GuessLetterCorrectEventData extends IData {
 export interface GuessWordCorrectEventData extends IData {
     word: string;
 }
+
+export interface GameOverEventData extends IData {
+    winner: string;
+}
+
+export interface OpponentGuessedWordCorrectlyEventData extends IData {
+    newWord: string;
+}

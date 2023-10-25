@@ -5,7 +5,7 @@ import { Router } from 'aurelia-router';
 import { GameService } from 'game-service';
 import { Events } from 'utils/events';
 import { EventAggregator } from 'utils/event-aggregator';
-import { GuessLetterCorrectEventData, GuessWordCorrectEventData } from 'interfaces/event-data';
+import { GameOverEventData, GuessLetterCorrectEventData, GuessWordCorrectEventData, OpponentGuessedWordCorrectlyEventData } from 'interfaces/event-data';
 
 @autoinject
 export class Game {
@@ -140,10 +140,16 @@ export class Game {
     }
 
     if (opponentGuessedWordCorrectlyResponse.isGameOver) {
-
+      this.winner = this.gameService.gameState.yourPlayerIndex === 0 ? 'player2' : 'player1';
+      this.toggleGameOverModal();
+      const data: GameOverEventData = { winner: this.winner };
+      this.eventAggregator.publish(Events.GameOver, data);
     }
     else if (opponentGuessedWordCorrectlyResponse.newWord) {
-
+      var opponentGameState = this.gameService.gameState.getOpponentPlayerState();
+      opponentGameState.currentWord = opponentGuessedWordCorrectlyResponse.newWord;
+      const data: OpponentGuessedWordCorrectlyEventData = { newWord: opponentGuessedWordCorrectlyResponse.newWord };
+      this.eventAggregator.publish(Events.OpponentGuessedWordCorrectly, data);
     }
   }
 }
