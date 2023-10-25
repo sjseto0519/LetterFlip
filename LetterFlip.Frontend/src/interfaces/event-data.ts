@@ -22,6 +22,10 @@ export interface GameOverEventData extends IData {
     winner: string;
 }
 
+export interface NewGameEventData extends IData {
+    
+}
+
 export interface OpponentGuessedWordCorrectlyEventData extends IData {
     newWord: string;
 }

@@ -1,11 +1,11 @@
 import { autoinject } from 'aurelia-framework';
 import { BabylonService } from "babylon-service";
-import { GuessLetterResponse, GuessWordResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SignalRService } from 'signalr-service';
+import { GuessLetterResponse, GuessWordResponse, NewGameStartedResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SignalRService } from 'signalr-service';
 import { Router } from 'aurelia-router';
 import { GameService } from 'game-service';
 import { Events } from 'utils/events';
 import { EventAggregator } from 'utils/event-aggregator';
-import { GameOverEventData, GuessLetterCorrectEventData, GuessWordCorrectEventData, OpponentGuessedWordCorrectlyEventData } from 'interfaces/event-data';
+import { GameOverEventData, GuessLetterCorrectEventData, GuessWordCorrectEventData, NewGameEventData, OpponentGuessedWordCorrectlyEventData } from 'interfaces/event-data';
 
 @autoinject
 export class Game {
@@ -26,6 +26,7 @@ export class Game {
     guessedWord = '';
     guessedPosition = 0;
   guessedPositions = [];
+  isNewGameRequested = false;
 
   toggleGuessLetterModal() {
     this.showGuessLetterModal = !this.showGuessLetterModal;
@@ -72,9 +73,8 @@ export class Game {
   }
 
   playNewGame() {
-    this.historyItems = [];
-    this.gameService.newGame(this.gameService.gameState.gameId, this.gameService.gameState.yourPlayerIndex === 0 ? 1 : 0, this.playerName, this.otherPlayerName);
-    this.toggleGameOverModal();
+    this.isNewGameRequested = true;
+    this.signalRService.requestNewGame(this.gameService.gameState.gameId);
   }
 
   exitGame() {
@@ -95,6 +95,7 @@ export class Game {
     this.signalRService.onOpponentCheckedTileResponse(this.handleOpponentCheckedTile);
     this.signalRService.onOpponentGuessedLetterIncorrectlyResponse(this.handleOpponentGuessLetterIncorrectly);
     this.signalRService.onOpponentGuessedWordIncorrectlyResponse(this.handleOpponentGuessWordIncorrectly);
+    this.signalRService.onNewGameStartedResponse(this.handleNewGameStarted);
   }
 
   attached() {
@@ -102,6 +103,19 @@ export class Game {
     canvas.width = window.innerWidth - 40;
     canvas.height = window.innerHeight - 40;
     this.babylonService.initialize(canvas, this.signalRService, this.playerName, this.otherPlayerName);
+  }
+
+  private async handleNewGameStarted(newGameStarted: NewGameStartedResponse) {
+    if (newGameStarted.gameId !== this.gameService.gameState.gameId)
+    {
+      return;
+    }
+
+    this.historyItems = [];
+    this.gameService.newGame(this.gameService.gameState.gameId, this.gameService.gameState.yourPlayerIndex === 0 ? 1 : 0, this.playerName, this.otherPlayerName);
+    const data: NewGameEventData = {};
+    this.eventAggregator.publish(Events.NewGame, data);
+    this.toggleGameOverModal();
   }
 
   private async handleGuessLetter(guessLetterResponse: GuessLetterResponse) {

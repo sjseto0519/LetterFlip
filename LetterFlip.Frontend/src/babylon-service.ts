@@ -124,6 +124,12 @@ export class BabylonService {
     this.camera.lowerAlphaLimit = Angle.FromDegrees(-100).radians();
   }
 
+  private unflipAll() {
+    this.tiles.forEach((tile) => {
+      tile.unflip();
+    });
+  }
+
   private setupLighting() {
     const light = new HemisphericLight('hemiLight', new Vector3(0, 1, 0), this.scene);
     light.intensity = 0.7;

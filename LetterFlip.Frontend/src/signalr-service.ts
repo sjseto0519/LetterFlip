@@ -62,6 +62,10 @@ export interface OpponentCheckedTileResponse {
   isCorrect: string;
 }
 
+export interface NewGameStartedResponse {
+  gameId: string;
+}
+
 export class SignalRService {
     private connection: DualHubConnection;
   
@@ -95,6 +99,10 @@ export class SignalRService {
 
     public async guessWord(word: string, playerIndex: number, gameId: string) {
       await this.connection.invoke(MessageType.GuessWord, word, playerIndex, gameId);
+    }
+
+    public async requestNewGame(gameId: string) {
+      await this.connection.invoke(MessageType.NewGame, gameId);
     }
 
     public addCreatedGameListener(callback: (gameResponse: GameResponse) => void) {
@@ -140,6 +148,10 @@ export class SignalRService {
 
     public onOpponentCheckedTileResponse(callback: (opponentCheckedTileResponse: OpponentCheckedTileResponse) => void) {
       this.connection.on(MessageType.OpponentCheckedTile, callback, DataType.OpponentCheckedTileResponse);
+    }
+
+    public onNewGameStartedResponse(callback: (onNewGameStartedResponse: NewGameStartedResponse) => void) {
+      this.connection.on(MessageType.NewGameStarted, callback, DataType.NewGameStartedResponse);
     }
   }
   

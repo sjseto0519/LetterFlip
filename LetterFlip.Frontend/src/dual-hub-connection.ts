@@ -11,12 +11,14 @@ export enum MessageType {
     GuessLetter = "GuessLetter",
     GuessLetterResponse = "GuessLetterResponse",
     GuessWord = "GuessWord",
+    NewGame = "NewGame",
     GuessWordResponse = "GuessWordResponse",
     OpponentGuessedWordCorrect = "OpponentGuessedWordCorrect",
     OpponentGuessedLetterCorrect = "OpponentGuessedLetterCorrect",
     OpponentGuessedWordIncorrect = "OpponentGuessedWordIncorrect",
     OpponentGuessedLetterIncorrect = "OpponentGuessedLetterIncorrect",
-    OpponentCheckedTile = "OpponentCheckedTile"
+    OpponentCheckedTile = "OpponentCheckedTile",
+    NewGameStarted = "NewGameStarted"
   }
 
 export class DualHubConnection {

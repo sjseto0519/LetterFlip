@@ -11,7 +11,8 @@ export enum DataType {
     OpponentGuessedLetterCorrectlyResponse,
     OpponentGuessedWordIncorrectlyResponse,
     OpponentGuessedLetterIncorrectlyResponse,
-    OpponentCheckedTileResponse
+    OpponentCheckedTileResponse,
+    NewGameStartedResponse
 }
 
 export class RealHubConnectionBuilder implements IHubConnectionBuilder {
@@ -26,7 +27,8 @@ export class RealHubConnectionBuilder implements IHubConnectionBuilder {
         [DataType.OpponentGuessedLetterCorrectlyResponse, ['gameId', 'letter', 'position', 'newWordView', 'isGameOver']],
         [DataType.OpponentGuessedWordIncorrectlyResponse, ['gameId', 'word', 'newWord']],
         [DataType.OpponentGuessedLetterIncorrectlyResponse, ['gameId', 'letter', 'position']],
-        [DataType.OpponentCheckedTileResponse, ['gameId', 'letter', 'isCorrect']]
+        [DataType.OpponentCheckedTileResponse, ['gameId', 'letter', 'isCorrect']],
+        [DataType.NewGameStartedResponse, ['gameId']]
       ]);
 
     constructor(url: string) {

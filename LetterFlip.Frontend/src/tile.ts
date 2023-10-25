@@ -18,6 +18,10 @@ export class Tile {
     flip() {
       this.isFlipped = !this.isFlipped;
     }
+
+    unflip() {
+      this.isFlipped = false;
+    }
     
     // In your Tile class definition
     update() {
