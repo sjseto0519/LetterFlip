@@ -9,6 +9,9 @@ import { autoinject } from 'aurelia-framework';
 import { DynamicTextureService } from 'dynamic-texture-service';
 import { Game } from 'game';
 import { GameService } from 'game-service';
+import { EventAggregator } from 'utils/event-aggregator';
+import { Events } from 'utils/events';
+import { NewGameStartedEventData } from 'interfaces/event-data';
 
 export interface WallUnit {
     wall: Mesh;
@@ -39,7 +42,7 @@ export class BabylonService {
     // Initialization logic here
   }
 
-  async initialize(canvas: HTMLCanvasElement, signalRService: SignalRService, playerName: string, otherPlayerName: string) {
+  async initialize(canvas: HTMLCanvasElement, signalRService: SignalRService, eventAggregator: EventAggregator) {
     await this.setupEngineAndScene(canvas);
     await this.setupPhysics();
     this.setupCamera(canvas);
@@ -49,7 +52,10 @@ export class BabylonService {
     this.setupTiles(signalRService);
     this.setupOverlay();
     this.setupCallbacks(signalRService);
-    
+    eventAggregator.subscribe<NewGameStartedEventData>(Events.NewGameStarted, 'babylon-service', () => {
+      this.unflipAll();
+    })
+
     this.engine.runRenderLoop(() => {
         // Update the skybox position to match the camera's position
         this.skybox.position = this.camera.position;
@@ -61,6 +67,7 @@ export class BabylonService {
 
         this.scene.render();
       });
+
   }
 
   private setupCallbacks(signalRService: SignalRService)
@@ -75,7 +82,10 @@ export class BabylonService {
           this.gameService.flipLetter(checkTileResponse.letter);
           this.selectedTile.flip();
         } else {
-          this.selectedTile.addAsterisks(checkTileResponse.occurrences);
+          let diff = checkTileResponse.occurrences - this.selectedTile.numberOfAsterisks;
+          while (diff--) {
+            this.addAsteriskToTile(this.selectedTile);
+          }
         }
       }
     });
@@ -215,38 +225,26 @@ export class BabylonService {
     this.setupTile(signalRService, "M", new Vector3(1.5 + adjust, -1, 0));
   }
 
-  private setupTile(signalRService: SignalRService, text: string, position: Vector3) {
-    const pbrMaterial = new PBRMaterial("pbr", this.scene);
-    pbrMaterial.roughness = 0.3; // Value between 0 and 1 to control roughness
-    pbrMaterial.emissiveColor =  new Color3(0.3922, 0.5843, 0.9294);
+  private createPBRMaterial(scene: Scene): PBRMaterial {
+    const pbrMaterial = new PBRMaterial("pbr", scene);
+    pbrMaterial.roughness = 0.3;
+    pbrMaterial.emissiveColor = new Color3(0.3922, 0.5843, 0.9294);
     pbrMaterial.emissiveIntensity = 0.9;
     pbrMaterial.alpha = 0.95;
-
-    // Create box (tile)
-    const box = MeshBuilder.CreateBox("box", { height: 0.5, width: 0.5, depth: 0.1 }, this.scene);
-
-    // Create dynamic texture
-    const texture = new DynamicTexture("dynamic texture", { width: 256, height: 256 }, this.scene);
-    pbrMaterial.emissiveTexture = texture;
-
-    // Draw text on the texture
+    return pbrMaterial;
+  }
+  
+  private createDynamicTextureWithText(scene: Scene, text: string): DynamicTexture {
+    const texture = new DynamicTexture("dynamic texture", { width: 256, height: 256 }, scene);
     const font = "bold 100px monospace";
     texture.drawText(text, 100, 160, font, "black", "white", true, true);
-
-    // Set the pivot point to the bottom of the box
-    box.setPivotMatrix(Matrix.Translation(0, 0.3, 0));
-
-    box.material = pbrMaterial;
-    box.position = position;
+    return texture;
+  }
   
-    const tile = new Tile(text, box);
-    this.tiles.push(tile);
-
-    // Create and assign an action manager if it doesn't exist
+  private setupTileActions(box: Mesh, tile: Tile, signalRService: SignalRService, pbrMaterial: PBRMaterial) {
     if (!box.actionManager) {
       box.actionManager = new ActionManager(this.scene);
     }
-    
     box.actionManager.registerAction(
       new ExecuteCodeAction(
         ActionManager.OnPickTrigger,
@@ -284,4 +282,49 @@ export class BabylonService {
       )
     );
   }
+  
+  private setupTile(signalRService: SignalRService, text: string, position: Vector3) {
+    const pbrMaterial = this.createPBRMaterial(this.scene);
+    const box = MeshBuilder.CreateBox("box", { height: 0.5, width: 0.5, depth: 0.1 }, this.scene);
+    const texture = this.createDynamicTextureWithText(this.scene, text);
+  
+    pbrMaterial.emissiveTexture = texture;
+    box.setPivotMatrix(Matrix.Translation(0, 0.3, 0));
+    box.material = pbrMaterial;
+    box.position = position;
+  
+    const tile = new Tile(text, box);
+    this.tiles.push(tile);
+  
+    this.setupTileActions(box, tile, signalRService, pbrMaterial);
+  }  
+
+  private addAsteriskToTile(tile: Tile) {
+    // Increment the number of asterisks for this tile
+    tile.incrementAsterisks();
+  
+    // Step 1: Increase the height of the tile
+    tile.box.scaling.y += 0.2;
+    tile.box.position.y += 0.1;
+  
+    // Step 2: Create a new plane mesh for the asterisk
+    const asteriskPlane = MeshBuilder.CreatePlane("asteriskPlane", { width: 0.2, height: 0.2 }, this.scene);
+  
+    // Step 3: Create a texture with the asterisk symbol
+    const asteriskTexture = new DynamicTexture("asteriskTexture", { width: 128, height: 128 }, this.scene);
+    const font = "bold 64px monospace";
+    asteriskTexture.drawText("*", 30, 80, font, "black", "white", true, true);
+  
+    // Create and set material for the asterisk
+    const asteriskMaterial = new StandardMaterial("asteriskMat", this.scene);
+    asteriskMaterial.diffuseTexture = asteriskTexture;
+    asteriskPlane.material = asteriskMaterial;
+  
+    // Step 4: Position the asterisk at the top of the tile
+    const yOffset = 0.5 + 0.1 * tile.numberOfAsterisks;  // Calculate the offset based on the number of asterisks
+    asteriskPlane.position = new Vector3(tile.box.position.x, yOffset, tile.box.position.z);
+  
+    // Step 5: Parent the asterisk to the tile so that they move together
+    asteriskPlane.setParent(tile.box);
+  }  
 }

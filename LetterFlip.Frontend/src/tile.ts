@@ -7,6 +7,8 @@ export class Tile {
       this.maxAngle = Math.PI / 2;
       this.minAngle = 0;
       this.angleIncrement = 0.1;
+      this.box = mesh;
+      this.numberOfAsterisks = 0;
     }
   
     isFlipped: boolean;
@@ -14,7 +16,14 @@ export class Tile {
     maxAngle: number;
     minAngle: number;
     angleIncrement: number;
+    numberOfAsterisks: number;
+    box: Mesh;
     
+    // Increment the number of asterisks
+    incrementAsterisks() {
+      this.numberOfAsterisks += 1;
+    }
+
     flip() {
       this.isFlipped = !this.isFlipped;
     }
@@ -40,10 +49,5 @@ export class Tile {
         this.mesh.rotation.x = this.currentAngle;
         }
     }
-
-    addAsterisks(occurrences: number) {
-        
-    }
-  
   }
   

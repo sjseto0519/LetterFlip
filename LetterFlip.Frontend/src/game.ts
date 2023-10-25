@@ -5,7 +5,7 @@ import { Router } from 'aurelia-router';
 import { GameService } from 'game-service';
 import { Events } from 'utils/events';
 import { EventAggregator } from 'utils/event-aggregator';
-import { GameOverEventData, GuessLetterCorrectEventData, GuessWordCorrectEventData, NewGameEventData, OpponentGuessedWordCorrectlyEventData } from 'interfaces/event-data';
+import { GameOverEventData, GuessLetterCorrectEventData, GuessWordCorrectEventData, NewGameStartedEventData, OpponentGuessedWordCorrectlyEventData } from 'interfaces/event-data';
 
 @autoinject
 export class Game {
@@ -102,7 +102,7 @@ export class Game {
     const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
     canvas.width = window.innerWidth - 40;
     canvas.height = window.innerHeight - 40;
-    this.babylonService.initialize(canvas, this.signalRService, this.playerName, this.otherPlayerName);
+    this.babylonService.initialize(canvas, this.signalRService, this.eventAggregator);
   }
 
   private async handleNewGameStarted(newGameStarted: NewGameStartedResponse) {
@@ -113,8 +113,8 @@ export class Game {
 
     this.historyItems = [];
     this.gameService.newGame(this.gameService.gameState.gameId, this.gameService.gameState.yourPlayerIndex === 0 ? 1 : 0, this.playerName, this.otherPlayerName);
-    const data: NewGameEventData = {};
-    this.eventAggregator.publish(Events.NewGame, data);
+    const data: NewGameStartedEventData = {};
+    this.eventAggregator.publish(Events.NewGameStarted, data);
     this.toggleGameOverModal();
   }
 
