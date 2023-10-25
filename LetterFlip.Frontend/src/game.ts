@@ -1,6 +1,6 @@
 import { autoinject } from 'aurelia-framework';
 import { BabylonService } from "babylon-service";
-import { GuessLetterResponse, GuessWordResponse, SignalRService } from 'signalr-service';
+import { GuessLetterResponse, GuessWordResponse, OpponentGuessedWordCorrectlyResponse, SignalRService } from 'signalr-service';
 import { Router } from 'aurelia-router';
 import { GameService } from 'game-service';
 import { Events } from 'utils/events';
@@ -78,6 +78,7 @@ export class Game {
     this.otherPlayerName = otherPlayerName;
     this.signalRService.onGuessLetterResponse(this.handleGuessLetter);
     this.signalRService.onGuessWordResponse(this.handleGuessWord);
+    this.signalRService.onOpponentGuessedWordCorrectlyResponse(this.handleOpponentGuessWordCorrectly);
   }
 
   attached() {
@@ -119,6 +120,20 @@ export class Game {
     {
       const data: GuessWordCorrectEventData = { word: guessWordResponse.word };
       this.eventAggregator.publish(Events.GuessWordCorrect, data);
+    }
+  }
+
+  private async handleOpponentGuessWordCorrectly(opponentGuessedWordCorrectlyResponse: OpponentGuessedWordCorrectlyResponse) {
+    if (opponentGuessedWordCorrectlyResponse.gameId !== this.gameService.gameState.gameId)
+    {
+      return;
+    }
+
+    if (opponentGuessedWordCorrectlyResponse.isGameOver) {
+
+    }
+    else if (opponentGuessedWordCorrectlyResponse.newWord) {
+
     }
   }
 }

@@ -12,8 +12,8 @@ import { GameService } from 'game-service';
 
 export interface WallUnit {
     wall: Mesh;
-    wallBody: any; // Replace with the appropriate type for wall bodies
-};
+    wallBody: PhysicsBody; // Replace with the appropriate type for wall bodies
+}
 
 export interface WallConfig {
     position: Vector3;
@@ -21,7 +21,7 @@ export interface WallConfig {
     height: number;
     depth: number;
     alpha: number;
-};  
+}
 
 @autoinject
 export class BabylonService {
@@ -84,7 +84,7 @@ export class BabylonService {
   private setupOverlay()
   {
     // Create the 3D UI manager
-    var manager = new GUI3DManager(this.scene);
+    const manager = new GUI3DManager(this.scene);
 
     // Let's add a button
     this.display = new HolographicButton("down");
@@ -150,7 +150,7 @@ export class BabylonService {
      // Set the diffuse color to Cornflower Blue
     skyboxMaterial.diffuseColor = new Color3(0.3922, 0.5843, 0.9294);
     skyboxMaterial.specularColor = new Color3(0, 0, 0);
-    var newMat = this.dynamicTextureService.toWallMaterial({name: "kloofendal_48d_partly_cloudy_puresky", alpha: 1.0, width: 8192, height: 4096, flip: true});
+    const newMat = this.dynamicTextureService.toWallMaterial({name: "kloofendal_48d_partly_cloudy_puresky", alpha: 1.0, width: 8192, height: 4096, flip: true});
     newMat.backFaceCulling = false;
     newMat.specularColor = new Color3(0, 0, 0);
     skybox.material = newMat;
@@ -220,21 +220,21 @@ export class BabylonService {
   }
 
   private setupTile(signalRService: SignalRService, text: string, position: Vector3) {
-    var pbrMaterial = new PBRMaterial("pbr", this.scene);
+    const pbrMaterial = new PBRMaterial("pbr", this.scene);
     pbrMaterial.roughness = 0.3; // Value between 0 and 1 to control roughness
     pbrMaterial.emissiveColor =  new Color3(0.3922, 0.5843, 0.9294);
     pbrMaterial.emissiveIntensity = 0.9;
     pbrMaterial.alpha = 0.95;
 
     // Create box (tile)
-    var box = MeshBuilder.CreateBox("box", { height: 0.5, width: 0.5, depth: 0.1 }, this.scene);
+    const box = MeshBuilder.CreateBox("box", { height: 0.5, width: 0.5, depth: 0.1 }, this.scene);
 
     // Create dynamic texture
-    var texture = new DynamicTexture("dynamic texture", { width: 256, height: 256 }, this.scene);
+    const texture = new DynamicTexture("dynamic texture", { width: 256, height: 256 }, this.scene);
     pbrMaterial.emissiveTexture = texture;
 
     // Draw text on the texture
-    var font = "bold 100px monospace";
+    const font = "bold 100px monospace";
     texture.drawText(text, 100, 160, font, "black", "white", true, true);
 
     // Set the pivot point to the bottom of the box

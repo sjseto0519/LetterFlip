@@ -67,6 +67,10 @@ export const handlers = [
               {
                 messageName: MessageType.GuessWordResponse,
                 delay: 500
+              },
+              {
+                messageName: MessageType.OpponentGuessedWordCorrect,
+                delay: 5000
               }
             ]
           };

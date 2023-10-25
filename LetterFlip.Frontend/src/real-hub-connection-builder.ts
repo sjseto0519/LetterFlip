@@ -6,7 +6,8 @@ export enum DataType {
     JoinGameResponse,
     CheckTileResponse,
     GuessLetterResponse,
-    GuessWordResponse
+    GuessWordResponse,
+    OpponentGuessedWordCorrectlyResponse
 }
 
 export class RealHubConnectionBuilder implements IHubConnectionBuilder {
@@ -15,8 +16,9 @@ export class RealHubConnectionBuilder implements IHubConnectionBuilder {
         [DataType.GameResponse, ['gameId', 'playerName']],
         [DataType.JoinGameResponse, ['playerName']],
         [DataType.CheckTileResponse, ['gameId', 'letter', 'occurrences']],
-        [DataType.GuessLetterResponse, ['gameId', 'isCorrect']],
-        [DataType.GuessWordResponse, ['gameId', 'isCorrect']]
+        [DataType.GuessLetterResponse, ['gameId', 'letter', 'isCorrect']],
+        [DataType.GuessWordResponse, ['gameId', 'word', 'isCorrect']],
+        [DataType.OpponentGuessedWordCorrectlyResponse, ['gameId', 'newWord', 'isGameOver']]
       ]);
 
     constructor(url: string) {
@@ -37,6 +39,9 @@ export class RealHubConnectionBuilder implements IHubConnectionBuilder {
     on<T>(methodName: string, callback: (data: T) => void, dataType: DataType) {
         const propertyNames = this.dataTypeMap.get(dataType) || [];
         this.hubConnection.on(methodName, (...args) => {
+          if (args.length !== propertyNames.length) {
+            throw new Error(`Property name length must match the number of arguments: ${args.length}`);
+          }
           const data = propertyNames.reduce((acc, propName, index) => {
             acc[propName] = args[index];
             return acc;

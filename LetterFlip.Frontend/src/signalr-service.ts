@@ -29,6 +29,12 @@ export interface GuessWordResponse {
   isCorrect: boolean;
 }
 
+export interface OpponentGuessedWordCorrectlyResponse {
+  gameId: string;
+  newWord: string;
+  isGameOver: boolean;
+}
+
 export class SignalRService {
     private connection: DualHubConnection;
   
@@ -87,6 +93,10 @@ export class SignalRService {
 
     public onGuessWordResponse(callback: (guessWordResponse: GuessWordResponse) => void) {
       this.connection.on(MessageType.GuessWordResponse, callback, DataType.GuessWordResponse);
+    }
+
+    public onOpponentGuessedWordCorrectlyResponse(callback: (opponentGuessedWordCorrectlyResponse: OpponentGuessedWordCorrectlyResponse) => void) {
+      this.connection.on(MessageType.OpponentGuessedWordCorrect, callback, DataType.OpponentGuessedWordCorrectlyResponse);
     }
   }
   
