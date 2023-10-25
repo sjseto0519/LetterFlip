@@ -1,7 +1,18 @@
-export interface GuessLetterCorrectEventData {
+export interface IData {
+
+}
+
+export type EventCallback<TData extends IData> = (data: TData) => void;
+
+// Base interface for type-erased container
+export interface ISubscriberContainer {
+    id: string;
+}
+
+export interface GuessLetterCorrectEventData extends IData {
     letter: string;
 }
 
-export interface GuessWordEventData {
+export interface GuessWordCorrectEventData extends IData {
     word: string;
 }

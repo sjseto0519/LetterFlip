@@ -6,8 +6,8 @@ import { SignalRService } from 'signalr-service';
 import { startWorker } from '../mocks/browser';
 import { DynamicTextureService } from 'dynamic-texture-service';
 import { GameService } from 'game-service';
-import { EventAggregatorFactory } from 'utils/event-aggregator-factory';
-import { EventAggregatorRegistry } from 'utils/event-aggregator-registry';
+import { EventAggregator } from 'utils/event-aggregator';
+import { PredefinedOrderSortStrategy } from 'utils/predefined-order-sort-strategy';
 
 export function configure(aurelia: Aurelia): void {
   aurelia.use
@@ -27,8 +27,11 @@ export function configure(aurelia: Aurelia): void {
   aurelia.container.registerSingleton(SignalRService);
   aurelia.container.registerSingleton(DynamicTextureService);
   aurelia.container.registerSingleton(GameService);
-  aurelia.container.registerSingleton(EventAggregatorFactory);
-  aurelia.container.registerSingleton(EventAggregatorRegistry);
+  aurelia.container.registerSingleton(EventAggregator, () => {
+    const ea = new EventAggregator();
+    ea.initialize(new PredefinedOrderSortStrategy());
+    return ea;
+  });
 
   aurelia.start().then(() => aurelia.setRoot(PLATFORM.moduleName('app')));
 }

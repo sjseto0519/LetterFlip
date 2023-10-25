@@ -1,121 +1,67 @@
-import { EventHandler } from "./event-handler";
+import { EventCallback, IData, ISubscriberContainer } from "interfaces/event-data";
+import { IEventAggregator } from "./i-event-aggregator";
+import { Subscriber } from "./subscriber";
+import { ISortStrategy } from "./i-sort-strategy";
 import { Events } from "./events";
-import { ISubscription } from "./i-subscription";
-import { Subscription } from "./subscription";
 
-/**
- * EventAggregator class for event-based subscriptions and publishing.
- * 
- * @template TEvent - Type of events that can be published or subscribed to.
- * @template TData - Type of the data that will be sent with the event.
- */
-export class EventAggregator<TEvent extends Events, TData> {
-  private eventMap = new Map<TEvent, ISubscription<TData>[]>();
-  private subscriberMap = new WeakMap<object, ISubscription<TData>[]>();
+// Event Aggregator class
+export class EventAggregator implements IEventAggregator {
+  private events: Map<Events, Subscriber<IData>[]> = new Map();
+  private predefinedOrder: Map<Events, string[]> = new Map();
+  private sortStrategy?: ISortStrategy;
 
-  /**
-   * Adds a subscription to the event map.
-   */
-  private addEventSubscription(event: TEvent, subscription: ISubscription<TData>) {
-    const subscriptions = [...(this.eventMap.get(event) || [])];
-    subscriptions.push(subscription);
-    this.eventMap.set(event, subscriptions);
+  constructor() {
+      // Initialize predefined order
+      this.predefinedOrder.set(Events.GuessLetterCorrect, ['sub1', 'sub2', 'sub3']);
+      this.predefinedOrder.set(Events.GuessWordCorrect, ['sub2', 'sub1']);
   }
 
-  /**
-   * Adds a subscription to the subscriber map.
-   */
-  private addSubscriberSubscription(subscriber: object, subscription: ISubscription<TData>) {
-      const subscriptions = this.subscriberMap.get(subscriber) || [];
-      subscriptions.push(subscription);
-      this.subscriberMap.set(subscriber, subscriptions);
+  initialize(sortStrategy: ISortStrategy): void {
+      this.sortStrategy = sortStrategy;
   }
 
-  private removeEventSubscription(event: TEvent, subscription: ISubscription<TData>) {
-      const subscriptions = this.eventMap.get(event);
-      if (subscriptions) {
-          const index = subscriptions.indexOf(subscription);
-          if (index !== -1) {
-              subscriptions.splice(index, 1);
-          }
-      }
-  }
-
-  private removeSubscriberSubscription(subscriber: object, subscription: ISubscription<TData>) {
-      const subscriptions = this.subscriberMap.get(subscriber);
-      if (subscriptions) {
-          const index = subscriptions.indexOf(subscription);
-          if (index !== -1) {
-              subscriptions.splice(index, 1);
-          }
-      }
-  }
-
-  /**
-   * Subscribes a handler to an event and returns the subscription object.
-   */
-  subscribe(event: TEvent, handler: EventHandler<TData>, subscriber: object): ISubscription<TData> {
-      try {
-        const subscription = new Subscription(event, handler, subscriber);
-        this.addEventSubscription(event, subscription);
-        if (subscriber) {
-            this.addSubscriberSubscription(subscriber, subscription);
-        }
-        return subscription;
-      } catch (error) {
-        console.error('An error occurred while subscribing:', error);
-        throw error;
-      }
-  }
-
-   /**
-   * Publishes an event with the provided data.
-   */
-  publish(event: TEvent, data: TData, subscribers?: object[]) {
-    try {
-      const subscriptions = this.eventMap.get(event) || [];
-      if (!subscribers) {
-          subscriptions.forEach(sub => sub.handler(data));
-      } else {
-          subscribers.forEach(subscriber => {
-              const subscriberSubs = this.subscriberMap.get(subscriber) || [];
-              subscriberSubs.forEach(sub => {
-                  if (sub.event === event) {
-                      sub.handler(data);
-                  }
-              });
-          });
-      }
-    } catch (error) {
-      console.error('An error occurred while publishing:', error);
-      throw error;
+  // Subscribe to an event
+  subscribe<TData extends IData>(eventName: Events, id: string, callback: EventCallback<TData>): void {
+    if (!this.events.has(eventName)) {
+        this.events.set(eventName, []);
     }
-  }
 
-  unsubscribeSubscriber(subscriber: object) {
-      const subscriptions = this.subscriberMap.get(subscriber);
-      if (subscriptions) {
-          subscriptions.forEach(sub => {
-              this.removeEventSubscription(sub.event as TEvent, sub);
-              sub.clear();
-          });
-          this.subscriberMap.delete(subscriber);
+    // Add the subscriber to the list
+    const newSubscriber = new Subscriber(id, callback);
+    const subscribers = this.events.get(eventName);
+
+    if (subscribers && this.sortStrategy) {
+        // Use the sort strategy to sort subscribers
+        const order = this.predefinedOrder.get(eventName) || [];
+        subscribers.push(newSubscriber);
+        
+        // Cast to ISubscriberContainer for sorting
+        const sortedSubscribers = this.sortStrategy.sort(subscribers as ISubscriberContainer[], order);
+        
+        this.events.set(eventName, sortedSubscribers as Subscriber<IData>[]);
+    }
+}
+
+  // Unsubscribe from an event
+  unsubscribe(eventName: Events, id: string): void {
+      const subscribers = this.events.get(eventName);
+      if (subscribers) {
+          const index = subscribers.findIndex(sub => sub.id === id);
+          if (index !== -1) {
+              subscribers.splice(index, 1);
+          }
       }
   }
 
-  unsubscribeEvent(event: TEvent) {
-      const subscriptions = this.eventMap.get(event);
-      if (subscriptions) {
-          subscriptions.forEach(sub => {
-              this.removeSubscriberSubscription(sub.subscriber, sub);
-              sub.clear();
-          });
-          this.eventMap.delete(event);
+  // Trigger an event
+  publish<TData extends IData>(eventName: Events, data: TData): void {
+      const subscribers = this.events.get(eventName);
+      if (subscribers) {
+          for (const subscriber of subscribers) {
+              // Explicitly cast the callback to handle TData
+              const callback = subscriber.callback as EventCallback<TData>;
+              callback(data);
+          }
       }
-  }
-
-  unsubscribeAll() {
-      this.eventMap.clear();
-      this.subscriberMap = new WeakMap<object, ISubscription<TData>[]>();
   }
 }

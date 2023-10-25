@@ -1,4 +1,0 @@
-enum EventDataPairs {
-    GuessLetterCorrectEvent,
-    GuessWordEvent
-  }

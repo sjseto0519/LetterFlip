@@ -3,12 +3,13 @@ import { BabylonService } from "babylon-service";
 import { GuessLetterResponse, GuessWordResponse, SignalRService } from 'signalr-service';
 import { Router } from 'aurelia-router';
 import { GameService } from 'game-service';
-import { EventAggregatorRegistry } from 'utils/event-aggregator-registry';
 import { Events } from 'utils/events';
+import { EventAggregator } from 'utils/event-aggregator';
+import { GuessLetterCorrectEventData, GuessWordCorrectEventData } from 'interfaces/event-data';
 
 @autoinject
 export class Game {
-  constructor(private babylonService: BabylonService, private signalRService: SignalRService, private gameService: GameService, private eventAggregatorRegistry: EventAggregatorRegistry, private router: Router) { 
+  constructor(private babylonService: BabylonService, private signalRService: SignalRService, private gameService: GameService, private eventAggregator: EventAggregator, private router: Router) { 
     babylonService.currentGame = this;
     this.guessedPositions = Array.from({ length: this.gameService.gameState.getYourPlayerState().currentWord.length }, () => '');
   }
@@ -98,7 +99,8 @@ export class Game {
     }
     else
     {
-      this.eventAggregatorRegistry.guessLetterCorrectEventAggregator.publish(Events.GuessLetterCorrect, { letter: guessLetterResponse.letter })
+      const data: GuessLetterCorrectEventData = { letter: guessLetterResponse.letter };
+      this.eventAggregator.publish(Events.GuessLetterCorrect, data);
     }
 
   }
@@ -115,7 +117,8 @@ export class Game {
     }
     else
     {
-
+      const data: GuessWordCorrectEventData = { word: guessWordResponse.word };
+      this.eventAggregator.publish(Events.GuessWordCorrect, data);
     }
   }
 }
