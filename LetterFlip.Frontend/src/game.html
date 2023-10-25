@@ -66,4 +66,15 @@
     </div>
   </div>
 </div>
+<!-- Game Over Modal -->
+<div class="modal modal-open" if.bind="isGameOver">
+  <div class="modal-box">
+    <h2 class="text-lg">Game Over</h2>
+    <p>${winner} is the winner!</p>
+    <div class="modal-action">
+      <button class="btn btn-primary" click.delegate="playNewGame()">Play New Game</button>
+      <button class="btn btn-accent" click.delegate="exitGame()">Exit</button>
+    </div>
+  </div>
+</div>
   </template>

@@ -18,6 +18,8 @@ export class Game {
     otherPlayerName: string;
     showHistory = false;
     historyItems = []; // Your history data
+    isGameOver = false;
+    winner = '';
     showGuessLetterModal = false;
     showGuessWordModal = false;
     guessedLetter = '';
@@ -27,6 +29,10 @@ export class Game {
 
   toggleGuessLetterModal() {
     this.showGuessLetterModal = !this.showGuessLetterModal;
+  }
+
+  toggleGameOverModal() {
+    this.isGameOver = !this.isGameOver;
   }
 
   updateGuess(position, value) {
@@ -63,6 +69,10 @@ export class Game {
 
   toggleHistory() {
     this.showHistory = !this.showHistory;
+  }
+
+  playNewGame() {
+    this.toggleGameOverModal();
   }
 
   exitGame() {
