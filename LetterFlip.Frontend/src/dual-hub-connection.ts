@@ -12,7 +12,8 @@ export enum MessageType {
     GuessLetterResponse = "GuessLetterResponse",
     GuessWord = "GuessWord",
     GuessWordResponse = "GuessWordResponse",
-    OpponentGuessedWordCorrect = "OpponentGuessedWordCorrect"
+    OpponentGuessedWordCorrect = "OpponentGuessedWordCorrect",
+    OpponentGuessedLetterCorrect = "OpponentGuessedLetterCorrect"
   }
 
 export class DualHubConnection {

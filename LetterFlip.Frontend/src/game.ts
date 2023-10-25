@@ -1,6 +1,6 @@
 import { autoinject } from 'aurelia-framework';
 import { BabylonService } from "babylon-service";
-import { GuessLetterResponse, GuessWordResponse, OpponentGuessedWordCorrectlyResponse, SignalRService } from 'signalr-service';
+import { GuessLetterResponse, GuessWordResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedWordCorrectlyResponse, SignalRService } from 'signalr-service';
 import { Router } from 'aurelia-router';
 import { GameService } from 'game-service';
 import { Events } from 'utils/events';
@@ -133,6 +133,24 @@ export class Game {
     }
   }
 
+  private async handleOpponentGuessLetterCorrectly(opponentGuessedLetterCorrectlyResponse: OpponentGuessedLetterCorrectlyResponse) {
+    if (opponentGuessedLetterCorrectlyResponse.gameId !== this.gameService.gameState.gameId)
+    {
+      return;
+    }
+
+    if (opponentGuessedLetterCorrectlyResponse.isGameOver) {
+      this.winner = this.gameService.gameState.yourPlayerIndex === 0 ? 'player2' : 'player1';
+      this.toggleGameOverModal();
+      const data: GameOverEventData = { winner: this.winner };
+      this.eventAggregator.publish(Events.GameOver, data);
+    }
+    else if (opponentGuessedLetterCorrectlyResponse.letter) {
+      var opponentGameState = this.gameService.gameState.getOpponentPlayerState();
+      opponentGameState.wordView = opponentGuessedLetterCorrectlyResponse.newWordView;
+    }
+  }
+
   private async handleOpponentGuessWordCorrectly(opponentGuessedWordCorrectlyResponse: OpponentGuessedWordCorrectlyResponse) {
     if (opponentGuessedWordCorrectlyResponse.gameId !== this.gameService.gameState.gameId)
     {
@@ -148,6 +166,7 @@ export class Game {
     else if (opponentGuessedWordCorrectlyResponse.newWord) {
       var opponentGameState = this.gameService.gameState.getOpponentPlayerState();
       opponentGameState.currentWord = opponentGuessedWordCorrectlyResponse.newWord;
+      opponentGameState.currentDifficulty = opponentGuessedWordCorrectlyResponse.newWord.length;
       const data: OpponentGuessedWordCorrectlyEventData = { newWord: opponentGuessedWordCorrectlyResponse.newWord };
       this.eventAggregator.publish(Events.OpponentGuessedWordCorrectly, data);
     }
