@@ -314,28 +314,24 @@ export class BabylonService {
     // Increment the number of asterisks for this tile
     tile.incrementAsterisks();
   
-    // Step 1: Increase the height of the tile
-    tile.box.scaling.y += 0.2;
-    tile.box.position.y += 0.1;
-  
     // Step 2: Create a new plane mesh for the asterisk
-    const asteriskPlane = MeshBuilder.CreatePlane("asteriskPlane", { width: 0.2, height: 0.2 }, this.scene);
+    const asteriskPlane = MeshBuilder.CreateBox("asteriskPlane", { width: 0.5, height: 0.2, depth: 0.1 }, this.scene);
   
     // Step 3: Create a texture with the asterisk symbol
     const asteriskTexture = new DynamicTexture("asteriskTexture", { width: 128, height: 128 }, this.scene);
-    const font = "bold 64px monospace";
-    asteriskTexture.drawText("*", 30, 80, font, "black", "white", true, true);
+    const font = "bold 100px monospace";
+    asteriskTexture.drawText("*", 50, 0, font, "black", "white", true, true);
   
     // Create and set material for the asterisk
-    const asteriskMaterial = new StandardMaterial("asteriskMat", this.scene);
-    asteriskMaterial.diffuseTexture = asteriskTexture;
-    asteriskPlane.material = asteriskMaterial;
+    const pbrMaterial = this.createPBRMaterial(this.scene);
+    pbrMaterial.emissiveTexture = asteriskTexture;
+    asteriskPlane.material = pbrMaterial;
   
     // Step 4: Position the asterisk at the top of the tile
-    const yOffset = 0.5 + 0.1 * tile.numberOfAsterisks;  // Calculate the offset based on the number of asterisks
-    asteriskPlane.position = new Vector3(tile.box.position.x, yOffset, tile.box.position.z);
+    const yOffset = 0.1 + 0.2 * tile.numberOfAsterisks;  // Calculate the offset based on the number of asterisks
+    asteriskPlane.position = new Vector3(tile.box.position.x, tile.box.position.y + yOffset, tile.box.position.z);
   
     // Step 5: Parent the asterisk to the tile so that they move together
-    asteriskPlane.setParent(tile.box);
+    // asteriskPlane.setParent(tile.box);
   }  
 }

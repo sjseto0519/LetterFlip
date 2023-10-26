@@ -1,7 +1,7 @@
 import { MessageType } from 'dual-hub-connection'
 import { InvokeMessagesResponse } from 'mock-hub-connection-builder'
 import { http, HttpResponse } from 'msw'
-import { CheckTileResponse, GameResponse, GuessLetterResponse, GuessWordResponse, JoinGameResponse } from 'signalr-service'
+import { CheckTileResponse, GameResponse, GuessLetterResponse, GuessWordResponse, JoinGameResponse, OpponentGuessedWordIncorrectlyResponse } from 'signalr-service'
 
 export interface HandlerRequestBody {
   params: any[];
@@ -98,6 +98,10 @@ export const handlers = [
               {
                 messageName: MessageType.CheckTileResponse,
                 delay: 500
+              },
+              {
+                messageName: MessageType.OpponentGuessedWordIncorrect,
+                delay: 5000
               }
             ]
           };
@@ -137,6 +141,14 @@ export const handlers = [
             opponentWord
           };
           return HttpResponse.json(joinGameResponse);
+        }
+        else if (postId === MessageType.OpponentGuessedWordIncorrect)
+        {
+          const opponentGuessedWordIncorrectlyResponse: OpponentGuessedWordIncorrectlyResponse = {
+            gameId,
+            word: 'HELLO'
+          };
+          return HttpResponse.json(opponentGuessedWordIncorrectlyResponse);
         }
         else
         {

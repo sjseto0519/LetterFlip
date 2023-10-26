@@ -49,7 +49,6 @@ export interface OpponentGuessedLetterCorrectlyResponse {
 export interface OpponentGuessedWordIncorrectlyResponse {
   gameId: string;
   word: string;
-  newWord: string;
 }
 
 export interface OpponentGuessedLetterIncorrectlyResponse {

@@ -33,6 +33,10 @@ export class Game {
   isNewGameRequested = false;
   showLastActionToast = true;
 
+  get reversedHistory() {
+    return [...this.historyItems].reverse();
+  }
+
   toggleGuessLetterModal() {
     this.showGuessLetterModal = !this.showGuessLetterModal;
   }
@@ -170,6 +174,12 @@ export class Game {
     {
       return;
     }
+
+    if (this.gameService.gameState.isYourTurn())
+    {
+      return;
+    }
+    
     if (!opponentCheckedTileResponse.isCorrect)
     {
       this.historyItems.push({ item: 'Opponent correctly guessed letter ' + opponentCheckedTileResponse.letter, yours: false});
@@ -203,12 +213,22 @@ export class Game {
       return;
     }
 
+    if (this.gameService.gameState.isYourTurn())
+    {
+      return;
+    }
+
     this.historyItems.push({ item: 'Opponent incorrectly guessed letter ' + opponentGuessedLetterIncorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterIncorrectlyResponse.position + 1), yours: false});
     this.gameService.nextTurn();
   }
 
   private async handleOpponentGuessLetterCorrectly(opponentGuessedLetterCorrectlyResponse: OpponentGuessedLetterCorrectlyResponse) {
     if (opponentGuessedLetterCorrectlyResponse.gameId !== this.gameService.gameState.gameId)
+    {
+      return;
+    }
+
+    if (this.gameService.gameState.isYourTurn())
     {
       return;
     }
@@ -232,12 +252,21 @@ export class Game {
       return;
     }
 
+    if (this.gameService.gameState.isYourTurn())
+    {
+      return;
+    }
     this.historyItems.push({ item: 'Opponent incorrectly guessed word ' + opponentGuessedWordIncorrectlyResponse.word, yours: false});
     this.gameService.nextTurn();
   }
 
   private async handleOpponentGuessWordCorrectly(opponentGuessedWordCorrectlyResponse: OpponentGuessedWordCorrectlyResponse) {
     if (opponentGuessedWordCorrectlyResponse.gameId !== this.gameService.gameState.gameId)
+    {
+      return;
+    }
+
+    if (this.gameService.gameState.isYourTurn())
     {
       return;
     }
