@@ -39,6 +39,14 @@ export class Game {
     return [...this.historyItems].reverse();
   }
 
+  get lastElementWithTypeAction() {
+    return [...this.historyItems].reverse().find(el => el.type !== 'Message');
+  }
+
+  get hasTypelessElement() {
+    return this.historyItems.findIndex(el => !el.type) > -1;
+  }
+
   toggleGuessLetterModal() {
     this.showGuessLetterModal = !this.showGuessLetterModal;
   }

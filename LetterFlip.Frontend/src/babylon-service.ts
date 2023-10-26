@@ -315,12 +315,12 @@ export class BabylonService {
     tile.incrementAsterisks();
   
     // Step 2: Create a new plane mesh for the asterisk
-    const asteriskPlane = MeshBuilder.CreateBox("asteriskPlane", { width: 0.5, height: 0.2, depth: 0.1 }, this.scene);
+    const asteriskPlane = MeshBuilder.CreateBox("asteriskPlane", { width: 0.5, height: 0.5, depth: 0.1 }, this.scene);
   
     // Step 3: Create a texture with the asterisk symbol
     const asteriskTexture = new DynamicTexture("asteriskTexture", { width: 128, height: 128 }, this.scene);
     const font = "bold 100px monospace";
-    asteriskTexture.drawText("*", 50, 0, font, "black", "white", true, true);
+    asteriskTexture.drawText("*", 0, 0, font, "black", "white", true, true);
   
     // Create and set material for the asterisk
     const pbrMaterial = this.createPBRMaterial(this.scene);
