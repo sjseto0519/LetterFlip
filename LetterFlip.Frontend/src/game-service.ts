@@ -18,7 +18,7 @@ export class GameService {
     playerState.flippedTiles.push(letter);
   }
 
-  newGame(gameId: string, playerIndex: number, playerName: string, otherPlayerName: string) {
+  newGame(gameId: string, playerIndex: number, playerName: string, otherPlayerName: string, opponentWord: string) {
     this.gameState = new GameState();
     this.gameState.gameId = gameId;
     if (playerIndex === 0)
@@ -35,6 +35,7 @@ export class GameService {
         this.gameState.player1Name = otherPlayerName;
         this.gameState.player2Name = playerName;
     }
+    this.gameState.getOpponentPlayerState().currentWord = opponentWord;
   }
   
 }

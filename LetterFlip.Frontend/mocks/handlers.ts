@@ -119,14 +119,16 @@ export const handlers = [
         {
           const gameResponse: GameResponse = {
             gameId,
-            playerName: 'MyPlayerTwo'
+            playerName: 'MyPlayerTwo',
+            opponentWord: 'ODES'
           }
           return HttpResponse.json(gameResponse);
         }
         else if (postId === MessageType.PlayerJoined)
         {
           const joinGameResponse: JoinGameResponse = {
-            playerName: 'MyPlayerTwo'
+            playerName: 'MyPlayerTwo',
+            opponentWord: 'EXAM'
           };
           return HttpResponse.json(joinGameResponse);
         }

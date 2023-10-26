@@ -33,7 +33,7 @@ export class JoinGame {
 
         await this.transitionUi();
 
-        this.gameService.newGame(this.gameId, 1, this.playerName, this.otherPlayerName);
+        this.gameService.newGame(this.gameId, 1, this.playerName, this.otherPlayerName, gameResponse.opponentWord || '');
 
         this.router.navigateToRoute('game', {
           gameId: this.gameId,
@@ -48,7 +48,7 @@ export class JoinGame {
 
         await this.transitionUi();
 
-        this.gameService.newGame(this.gameId, 0, this.playerName, joinGameResponse.playerName);
+        this.gameService.newGame(this.gameId, 0, this.playerName, joinGameResponse.playerName, joinGameResponse.opponentWord);
 
         this.router.navigateToRoute('game', {
           gameId: this.gameId,
@@ -70,7 +70,6 @@ export class JoinGame {
 
   private async transitionUi() {
     this.isFlipped = false;
-    this.hideInputs = true;
     // Trigger the animation by applying a class
     this.inputUserName.classList.add('hide');
     this.inputGameId.classList.add('hide');
@@ -91,6 +90,7 @@ export class JoinGame {
     // Ask server to join the game
     if (this.playerName && this.gameId)
     {
+      this.hideInputs = true;
       await this.signalRService.joinGame(this.playerName, this.gameId);
     }
   }

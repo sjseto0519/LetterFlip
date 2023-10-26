@@ -18,8 +18,8 @@ export enum DataType {
 export class RealHubConnectionBuilder implements IHubConnectionBuilder {
     private hubConnection: HubConnection;
     private dataTypeMap: Map<DataType, string[]> = new Map([
-        [DataType.GameResponse, ['gameId', 'playerName']],
-        [DataType.JoinGameResponse, ['playerName']],
+        [DataType.GameResponse, ['gameId', 'playerName', 'opponentWord']],
+        [DataType.JoinGameResponse, ['playerName', 'opponentWord']],
         [DataType.CheckTileResponse, ['gameId', 'letter', 'occurrences']],
         [DataType.GuessLetterResponse, ['gameId', 'letter', 'isCorrect']],
         [DataType.GuessWordResponse, ['gameId', 'word', 'isCorrect']],
@@ -28,7 +28,7 @@ export class RealHubConnectionBuilder implements IHubConnectionBuilder {
         [DataType.OpponentGuessedWordIncorrectlyResponse, ['gameId', 'word', 'newWord']],
         [DataType.OpponentGuessedLetterIncorrectlyResponse, ['gameId', 'letter', 'position']],
         [DataType.OpponentCheckedTileResponse, ['gameId', 'letter', 'isCorrect']],
-        [DataType.NewGameStartedResponse, ['gameId']]
+        [DataType.NewGameStartedResponse, ['gameId', 'opponentWord']]
       ]);
 
     constructor(url: string) {

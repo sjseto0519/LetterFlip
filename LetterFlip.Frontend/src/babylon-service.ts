@@ -59,7 +59,7 @@ export class BabylonService {
     this.engine.runRenderLoop(() => {
         // Update the skybox position to match the camera's position
         this.skybox.position = this.camera.position;
-        this.text.text = `${this.gameService.gameState.currentPlayerName()}'s Turn\nCurrent Word:\n${this.gameService.gameState.getOpponentPlayerState().currentWord}`;
+        this.text.text = `${this.gameService.gameState.currentPlayerName()}'s Turn\nOpponent's Word:\n${this.gameService.gameState.getOpponentPlayerState().currentWord}`;
   
         if (this.selectedTile) {
           this.selectedTile.update();
@@ -68,6 +68,10 @@ export class BabylonService {
         this.scene.render();
       });
 
+  }
+
+  dispose() {
+    this.scene.dispose();
   }
 
   private setupCallbacks(signalRService: SignalRService)
@@ -102,7 +106,14 @@ export class BabylonService {
     this.display.position.y = -2;
     this.display.position.x = -5;
     this.display.scaling = new Vector3(2, 2, 2);
-    this.display.mesh.material = this.dynamicTextureService.toWallMaterial({name: "kloofendal_48d_partly_cloudy_puresky", alpha: 1.0, width: 8192, height: 4096, flip: false});
+
+    const overlayMaterial = new StandardMaterial("overlay", this.scene);
+    overlayMaterial.backFaceCulling = false;
+     // Set the diffuse color to Cornflower Blue
+    overlayMaterial.diffuseColor = new Color3(0.216, 0.804, 0.745);
+    overlayMaterial.specularColor = new Color3(0, 0, 0);
+
+    this.display.mesh.material = overlayMaterial;
 
     this.text = new TextBlock();
     this.text.text = "";
@@ -166,10 +177,6 @@ export class BabylonService {
      // Set the diffuse color to Cornflower Blue
     skyboxMaterial.diffuseColor = new Color3(0.3922, 0.5843, 0.9294);
     skyboxMaterial.specularColor = new Color3(0, 0, 0);
-    const newMat = this.dynamicTextureService.toWallMaterial({name: "kloofendal_48d_partly_cloudy_puresky", alpha: 1.0, width: 8192, height: 4096, flip: true});
-    newMat.backFaceCulling = false;
-    newMat.specularColor = new Color3(0, 0, 0);
-    skybox.material = newMat;
     skybox.material = skyboxMaterial;
   }
 
@@ -184,8 +191,13 @@ export class BabylonService {
   private createWall(position: Vector3, width: number, height: number, depth: number, alpha: number): WallUnit {
     const wall = MeshBuilder.CreateBox("wall", { width, height, depth }, this.scene);
     wall.position = position;
-    wall.material = this.dynamicTextureService.toWallMaterial({name: "sandstone-brick_base_4k", alpha, width: 1024, height: 512, flip: false});
-  
+    wall.material = this.dynamicTextureService.toWallMaterial({
+      name: "blue-checkered-fabric_base_4k", 
+      alpha, 
+      width: 2048, 
+      height: 1024, 
+      flip: false
+    }) as StandardMaterial;
     const wallAggregate = new PhysicsAggregate(wall, PhysicsShapeType.BOX, { mass: 0 }, this.scene);
     const wallBody = wallAggregate.body;
     return { wall, wallBody };

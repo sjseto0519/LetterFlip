@@ -55,6 +55,7 @@ export class DynamicTextureService {
         material.diffuseTexture = dynamicTexture;
         if (config.emissiveColor) {
             material.emissiveColor = config.emissiveColor;
+            material.useEmissiveAsIllumination = true;
         }
         material.alpha = config.alpha;
 

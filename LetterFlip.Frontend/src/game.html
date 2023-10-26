@@ -1,5 +1,5 @@
 <template>
-  <div class="bg-gradient-to-r from-green-400 to-blue-500 text-white p-4">
+  <div class="bg-gradient-to-r from-green-400 to-blue-500 text-white p-4 fixed w-full z-50">
     <div class="container mx-auto">
       <div class="flex items-center justify-between">
         <!-- Left: Title -->
@@ -43,11 +43,11 @@
     <div class="flex space-x-2">
       <input repeat.for="position of guessedPositions"
              type="text" 
-             value.bind="guessedPositions[position]" 
+             value.bind="position" 
              placeholder="-" 
              maxlength="1"
-             input.trigger="updateGuess(position, $event.target.value)"
-             class="input input-bordered w-8 text-center">
+             input.trigger="updateGuess($index, $event.target.value)"
+             class="input input-bordered w-8 text-center p-0">
     </div>
     <div class="modal-action">
       <button class="btn btn-primary" click.delegate="submitLetterGuess()">Submit Guess</button>
@@ -82,5 +82,21 @@
       <button class="btn btn-accent" click.delegate="exitGame()">Exit</button>
     </div>
   </div>
+</div>
+<div class="fixed bottom-4 right-4" if.bind="this.historyItems.length > 0">
+  <div class="alert shadow-lg">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <div if.bind="showLastActionToast" >
+      <h3 class="font-bold">Last Action</h3>
+      <div class="text-xs">${this.historyItems[this.historyItems.length - 1]}</div>
+    </div>
+    <button class="btn btn-sm" hidden.bind="showLastActionToast === false" click.delegate="showLastActionToast = false">Hide</button>
+    <button class="btn btn-sm" hidden.bind="showLastActionToast === true" click.delegate="showLastActionToast = true">Show</button>
+  </div>
+</div>
+<div class="bg-gradient-to-r from-green-400 to-blue-500 text-white p-4 fixed bottom-[-3px] left-0 h-[3rem] w-full z-50">
+
 </div>
   </template>

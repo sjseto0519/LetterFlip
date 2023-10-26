@@ -11,7 +11,6 @@ import { GameOverEventData, GuessLetterCorrectEventData, GuessWordCorrectEventDa
 export class Game {
   constructor(private babylonService: BabylonService, private signalRService: SignalRService, private gameService: GameService, private eventAggregator: EventAggregator, private router: Router) { 
     babylonService.currentGame = this;
-    this.guessedPositions = Array.from({ length: this.gameService.gameState.getYourPlayerState().currentWord.length }, () => '');
   }
 
     playerName: string;
@@ -27,6 +26,7 @@ export class Game {
     guessedPosition = 0;
   guessedPositions = [];
   isNewGameRequested = false;
+  showLastActionToast = true;
 
   toggleGuessLetterModal() {
     this.showGuessLetterModal = !this.showGuessLetterModal;
@@ -36,15 +36,17 @@ export class Game {
     this.isGameOver = !this.isGameOver;
   }
 
-  updateGuess(position, value) {
-    // Reset all positions
-    this.guessedPositions.fill('');
+  updateGuess(position, value: string) {
+    // Create a new array with all empty strings
+    const newGuessedPositions = new Array(this.guessedPositions.length).fill('');
 
     // Update the selected position
-    this.guessedPositions[position] = value;
+    newGuessedPositions[position] = value.toUpperCase();
+
+    // Replace the old array with the new one
+    this.guessedPositions = newGuessedPositions;
 
     this.guessedPosition = position;
-    // Trigger a view update (Aurelia should handle this automatically, but just to be explicit)
   }
 
   submitLetterGuess() {
@@ -86,6 +88,7 @@ export class Game {
     const { gameId, playerName, otherPlayerName } = params;
     // Initialize any class properties based on these
     this.gameService.gameState.gameId = gameId;
+    this.guessedPositions = Array.from({ length: this.gameService.gameState.getYourPlayerState().currentDifficulty }, () => '');
     this.playerName = playerName;
     this.otherPlayerName = otherPlayerName;
     this.signalRService.onGuessLetterResponse(this.handleGuessLetter);
@@ -96,6 +99,12 @@ export class Game {
     this.signalRService.onOpponentGuessedLetterIncorrectlyResponse(this.handleOpponentGuessLetterIncorrectly);
     this.signalRService.onOpponentGuessedWordIncorrectlyResponse(this.handleOpponentGuessWordIncorrectly);
     this.signalRService.onNewGameStartedResponse(this.handleNewGameStarted);
+  }
+
+  deactivate() {
+    this.babylonService.dispose();
+    // Refresh the root page
+    window.location.href = '/';
   }
 
   attached() {
@@ -112,7 +121,7 @@ export class Game {
     }
 
     this.historyItems = [];
-    this.gameService.newGame(this.gameService.gameState.gameId, this.gameService.gameState.yourPlayerIndex === 0 ? 1 : 0, this.playerName, this.otherPlayerName);
+    this.gameService.newGame(this.gameService.gameState.gameId, this.gameService.gameState.yourPlayerIndex === 0 ? 1 : 0, this.playerName, this.otherPlayerName, newGameStarted.opponentWord);
     const data: NewGameStartedEventData = {};
     this.eventAggregator.publish(Events.NewGameStarted, data);
     this.toggleGameOverModal();

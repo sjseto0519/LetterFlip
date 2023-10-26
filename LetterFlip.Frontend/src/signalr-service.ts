@@ -5,10 +5,12 @@ import { DataType, RealHubConnectionBuilder } from "real-hub-connection-builder"
 export interface GameResponse {
   gameId: string,
   playerName: string
+  opponentWord?: string;
 }
 
 export interface JoinGameResponse {
   playerName: string;
+  opponentWord: string;
 }
 
 export interface CheckTileResponse {
@@ -64,6 +66,7 @@ export interface OpponentCheckedTileResponse {
 
 export interface NewGameStartedResponse {
   gameId: string;
+  opponentWord: string;
 }
 
 export class SignalRService {
