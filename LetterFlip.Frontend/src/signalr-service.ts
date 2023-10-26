@@ -60,7 +60,7 @@ export interface OpponentGuessedLetterIncorrectlyResponse {
 export interface OpponentCheckedTileResponse {
   gameId: string;
   letter: string;
-  isCorrect: string;
+  isCorrect: boolean;
 }
 
 export interface NewGameStartedResponse {

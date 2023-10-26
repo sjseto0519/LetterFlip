@@ -182,12 +182,12 @@ export class Game {
     
     if (!opponentCheckedTileResponse.isCorrect)
     {
-      this.historyItems.push({ item: 'Opponent correctly guessed letter ' + opponentCheckedTileResponse.letter, yours: false});
+      this.historyItems.push({ item: 'Opponent incorrectly guessed letter ' + opponentCheckedTileResponse.letter, yours: false});
       this.gameService.nextTurn();
     }
     else
     {
-      this.historyItems.push({ item: 'Opponent incorrectly guessed letter ' + opponentCheckedTileResponse.letter, yours: false});
+      this.historyItems.push({ item: 'Opponent correctly guessed letter ' + opponentCheckedTileResponse.letter, yours: false});
     }
   }
 

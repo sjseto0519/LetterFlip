@@ -1,7 +1,7 @@
 import { MessageType } from 'dual-hub-connection'
 import { InvokeMessagesResponse } from 'mock-hub-connection-builder'
 import { http, HttpResponse } from 'msw'
-import { CheckTileResponse, GameResponse, GuessLetterResponse, GuessWordResponse, JoinGameResponse, OpponentGuessedWordIncorrectlyResponse } from 'signalr-service'
+import { CheckTileResponse, GameResponse, GuessLetterResponse, GuessWordResponse, JoinGameResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse } from 'signalr-service'
 
 export interface HandlerRequestBody {
   params: any[];
@@ -77,6 +77,10 @@ export const handlers = [
               {
                 messageName: MessageType.OpponentGuessedWordCorrect,
                 delay: 5000
+              },
+              {
+                messageName: MessageType.OpponentGuessedLetterIncorrect,
+                delay: 8000
               }
             ]
           };
@@ -142,6 +146,16 @@ export const handlers = [
           };
           return HttpResponse.json(joinGameResponse);
         }
+        else if (postId === MessageType.OpponentGuessedWordCorrect)
+        {
+          const opponentGuessedWordCorrectlyResponse: OpponentGuessedWordCorrectlyResponse = {
+            gameId,
+            word: 'EXAM',
+            newWord: 'HELLO',
+            isGameOver: false
+          };
+          return HttpResponse.json(opponentGuessedWordCorrectlyResponse);
+        }
         else if (postId === MessageType.OpponentGuessedWordIncorrect)
         {
           const opponentGuessedWordIncorrectlyResponse: OpponentGuessedWordIncorrectlyResponse = {
@@ -149,6 +163,33 @@ export const handlers = [
             word: 'HELLO'
           };
           return HttpResponse.json(opponentGuessedWordIncorrectlyResponse);
+        }
+        else if (postId === MessageType.OpponentGuessedLetterCorrect)
+        {
+          const opponentGuessedLetterCorrectlyResponse: OpponentGuessedLetterCorrectlyResponse = {
+            gameId,
+            letter: 'E',
+            position: 0,
+            newWordView: [ 'E', '', '', '' ],
+            isGameOver: false
+          };
+          return HttpResponse.json(opponentGuessedLetterCorrectlyResponse);
+        }
+        else if (postId === MessageType.OpponentGuessedLetterIncorrect) {
+          const opponentGuessedLetterIncorrectlyResponse: OpponentGuessedLetterIncorrectlyResponse = {
+            gameId,
+            letter: 'Z',
+            position: 0
+          };
+          return HttpResponse.json(opponentGuessedLetterIncorrectlyResponse);
+        }
+        else if (postId === MessageType.OpponentCheckedTile) {
+          const opponentCheckedTileResponse: OpponentCheckedTileResponse = {
+            gameId,
+            letter: 'Z',
+            isCorrect: false
+          };
+          return HttpResponse.json(opponentCheckedTileResponse);
         }
         else
         {
