@@ -26,6 +26,11 @@ export interface NewGameStartedEventData extends IData {
 
 }
 
+export interface CheckTileEventData extends IData {
+    letter: string;
+    occurrences: number;
+}
+
 export interface OpponentGuessedWordCorrectlyEventData extends IData {
     newWord: string;
 }

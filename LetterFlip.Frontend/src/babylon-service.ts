@@ -4,14 +4,14 @@ import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, MeshBuilder,
     PhysicsShapeType, Mesh, StandardMaterial, PBRMaterial, Texture, Color3, PhysicsBody, DirectionalLight, Angle, 
     DynamicTexture, Matrix, ActionManager, ExecuteCodeAction } from '@babylonjs/core';
 import { Tile } from 'tile';
-import { CheckTileResponse, SignalRService } from 'signalr-service';
+import { SignalRService } from 'signalr-service';
 import { autoinject } from 'aurelia-framework';
 import { DynamicTextureService } from 'dynamic-texture-service';
 import { Game } from 'game';
 import { GameService } from 'game-service';
 import { EventAggregator } from 'utils/event-aggregator';
 import { Events } from 'utils/events';
-import { NewGameStartedEventData } from 'interfaces/event-data';
+import { CheckTileEventData, NewGameStartedEventData } from 'interfaces/event-data';
 
 export interface WallUnit {
     wall: Mesh;
@@ -51,7 +51,7 @@ export class BabylonService {
     this.setupWalls();
     this.setupTiles(signalRService);
     this.setupOverlay();
-    this.setupCallbacks(signalRService);
+    this.setupCallbacks(eventAggregator);
     eventAggregator.subscribe<NewGameStartedEventData>(Events.NewGameStarted, 'babylon-service', () => {
       this.unflipAll();
     })
@@ -74,25 +74,24 @@ export class BabylonService {
     this.scene.dispose();
   }
 
-  private setupCallbacks(signalRService: SignalRService)
+  private setupCallbacks(eventAggregator: EventAggregator)
   {
-    signalRService.onCheckTileResponse((checkTileResponse: CheckTileResponse) => {
-      if (checkTileResponse.gameId !== this.gameService.gameState.gameId) {
-        return; // Ignore messages for other games
-      }
-    
-      if (this.selectedTile && this.selectedTile.letter === checkTileResponse.letter) {
-        if (checkTileResponse.occurrences === 0) {
-          this.gameService.flipLetter(checkTileResponse.letter);
-          this.selectedTile.flip();
-        } else {
-          let diff = checkTileResponse.occurrences - this.selectedTile.numberOfAsterisks;
-          while (diff--) {
-            this.addAsteriskToTile(this.selectedTile);
-          }
+    eventAggregator.subscribe(Events.CheckTile, 'babylon-service', this.handleCheckTileResponse.bind(this));
+  }
+
+  private handleCheckTileResponse(checkTileResponse: CheckTileEventData) {
+
+    if (this.selectedTile && this.selectedTile.letter === checkTileResponse.letter) {
+      if (checkTileResponse.occurrences === 0) {
+        this.gameService.flipLetter(checkTileResponse.letter);
+        this.selectedTile.flip();
+      } else {
+        let diff = checkTileResponse.occurrences - this.selectedTile.numberOfAsterisks;
+        while (diff--) {
+          this.addAsteriskToTile(this.selectedTile);
         }
       }
-    });
+    }
   }
 
   private setupOverlay()

@@ -3,15 +3,21 @@ import { InvokeMessagesResponse } from 'mock-hub-connection-builder'
 import { http, HttpResponse } from 'msw'
 import { CheckTileResponse, GameResponse, GuessLetterResponse, GuessWordResponse, JoinGameResponse } from 'signalr-service'
 
+export interface HandlerRequestBody {
+  params: any[];
+}
+
 export const handlers = [
     http.post('/hub/invoke/:postId', async ({ request, params, cookies }) => {
 
         const gameId = "abc123";
         const scenarioIndex = 0;
         const guessLetterScenarioIndex = 0;
+        const yourWord = "MILE";
+        const opponentWord = "EXAM";
 
         const { postId } = params
-        const requestBody = await request.json()
+        const requestBody: HandlerRequestBody = await request.json() as HandlerRequestBody;
 
         if (postId === MessageType.JoinOrCreateGame) {
           if (scenarioIndex === 0) {
@@ -53,7 +59,7 @@ export const handlers = [
         }
         else if (postId === MessageType.GuessLetterResponse)
         {
-          const requestArray = requestBody as string[];
+          const requestArray = requestBody.params as string[];
           const guessLetterResponse: GuessLetterResponse = {
             gameId,
             letter: requestArray[0],
@@ -78,7 +84,7 @@ export const handlers = [
         }
         else if (postId === MessageType.GuessWordResponse)
         {
-          const requestArray = requestBody as string[];
+          const requestArray = requestBody.params as string[];
           const guessWordResponse: GuessWordResponse = {
             gameId,
             word: requestArray[0],
@@ -99,11 +105,11 @@ export const handlers = [
         }
         else if (postId === MessageType.CheckTileResponse)
         {
-          const requestArray = requestBody as string[];
+          const requestArray = requestBody.params as string[];
           const checkTileResponse: CheckTileResponse = {
             gameId,
             letter: requestArray[0],
-            occurrences: 1
+            occurrences: yourWord.indexOf(requestArray[0]) > -1 ? 1 : 0
           };
           return HttpResponse.json(checkTileResponse);
         }
@@ -120,7 +126,7 @@ export const handlers = [
           const gameResponse: GameResponse = {
             gameId,
             playerName: 'MyPlayerTwo',
-            opponentWord: 'ODES'
+            opponentWord
           }
           return HttpResponse.json(gameResponse);
         }
@@ -128,7 +134,7 @@ export const handlers = [
         {
           const joinGameResponse: JoinGameResponse = {
             playerName: 'MyPlayerTwo',
-            opponentWord: 'EXAM'
+            opponentWord
           };
           return HttpResponse.json(joinGameResponse);
         }

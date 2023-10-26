@@ -1,22 +1,27 @@
 import { autoinject } from 'aurelia-framework';
 import { BabylonService } from "babylon-service";
-import { GuessLetterResponse, GuessWordResponse, NewGameStartedResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SignalRService } from 'signalr-service';
+import { CheckTileResponse, GuessLetterResponse, GuessWordResponse, NewGameStartedResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SignalRService } from 'signalr-service';
 import { Router } from 'aurelia-router';
 import { GameService } from 'game-service';
 import { Events } from 'utils/events';
 import { EventAggregator } from 'utils/event-aggregator';
 import { GameOverEventData, GuessLetterCorrectEventData, GuessWordCorrectEventData, NewGameStartedEventData, OpponentGuessedWordCorrectlyEventData } from 'interfaces/event-data';
 
+export interface HistoryItem {
+  item: string;
+  yours: boolean;
+}
+
 @autoinject
 export class Game {
-  constructor(private babylonService: BabylonService, private signalRService: SignalRService, private gameService: GameService, private eventAggregator: EventAggregator, private router: Router) { 
+  constructor(public gameService: GameService, private babylonService: BabylonService, private signalRService: SignalRService, private eventAggregator: EventAggregator, private router: Router) { 
     babylonService.currentGame = this;
   }
 
     playerName: string;
     otherPlayerName: string;
     showHistory = false;
-    historyItems = []; // Your history data
+    historyItems: HistoryItem[] = []; // Your history data
     isGameOver = false;
     winner = '';
     showGuessLetterModal = false;
@@ -52,7 +57,7 @@ export class Game {
   submitLetterGuess() {
     const guessedLetter = this.guessedPositions.find(Boolean);
     if (guessedLetter) {
-      this.historyItems.push(`Guessed the letter ${guessedLetter} at position ${this.guessedPosition + 1}`);
+      this.historyItems.push({ item: `Guessed the letter ${guessedLetter} at position ${this.guessedPosition + 1}`, yours: true});
     }
     this.signalRService.guessLetter(guessedLetter, this.guessedPosition, this.gameService.gameState.yourPlayerIndex, this.gameService.gameState.gameId);
     this.toggleGuessLetterModal();
@@ -64,7 +69,7 @@ export class Game {
 
     submitWordGuess() {
       if (this.guessedWord) {
-        this.historyItems.push(`Guessed the word ${this.guessedWord}`);
+        this.historyItems.push({ item: `Guessed the word ${this.guessedWord}`, yours: true});
       }
       this.signalRService.guessWord(this.guessedWord, this.gameService.gameState.yourPlayerIndex, this.gameService.gameState.gameId);
       this.toggleGuessWordModal();
@@ -91,14 +96,15 @@ export class Game {
     this.guessedPositions = Array.from({ length: this.gameService.gameState.getYourPlayerState().currentDifficulty }, () => '');
     this.playerName = playerName;
     this.otherPlayerName = otherPlayerName;
-    this.signalRService.onGuessLetterResponse(this.handleGuessLetter);
-    this.signalRService.onGuessWordResponse(this.handleGuessWord);
-    this.signalRService.onOpponentGuessedLetterCorrectlyResponse(this.handleOpponentGuessLetterCorrectly);
-    this.signalRService.onOpponentGuessedWordCorrectlyResponse(this.handleOpponentGuessWordCorrectly);
-    this.signalRService.onOpponentCheckedTileResponse(this.handleOpponentCheckedTile);
-    this.signalRService.onOpponentGuessedLetterIncorrectlyResponse(this.handleOpponentGuessLetterIncorrectly);
-    this.signalRService.onOpponentGuessedWordIncorrectlyResponse(this.handleOpponentGuessWordIncorrectly);
-    this.signalRService.onNewGameStartedResponse(this.handleNewGameStarted);
+    this.signalRService.onGuessLetterResponse(this.handleGuessLetter.bind(this));
+    this.signalRService.onGuessWordResponse(this.handleGuessWord.bind(this));
+    this.signalRService.onOpponentGuessedLetterCorrectlyResponse(this.handleOpponentGuessLetterCorrectly.bind(this));
+    this.signalRService.onOpponentGuessedWordCorrectlyResponse(this.handleOpponentGuessWordCorrectly.bind(this));
+    this.signalRService.onOpponentCheckedTileResponse(this.handleOpponentCheckedTile.bind(this));
+    this.signalRService.onOpponentGuessedLetterIncorrectlyResponse(this.handleOpponentGuessLetterIncorrectly.bind(this));
+    this.signalRService.onOpponentGuessedWordIncorrectlyResponse(this.handleOpponentGuessWordIncorrectly.bind(this));
+    this.signalRService.onNewGameStartedResponse(this.handleNewGameStarted.bind(this));
+    this.signalRService.onCheckTileResponse(this.handleCheckTileResponse.bind(this));
   }
 
   deactivate() {
@@ -112,6 +118,20 @@ export class Game {
     canvas.width = window.innerWidth - 40;
     canvas.height = window.innerHeight - 40;
     this.babylonService.initialize(canvas, this.signalRService, this.eventAggregator);
+  }
+
+  private async handleCheckTileResponse(checkTileResponse: CheckTileResponse) {
+    if (checkTileResponse.gameId !== this.gameService.gameState.gameId)
+    {
+      return;
+    }
+
+    if (checkTileResponse.occurrences === 0) {
+      this.gameService.nextTurn();
+    }
+    this.historyItems.push({ item: 'Guessed tile ' + checkTileResponse.letter + ' and found ' + checkTileResponse.occurrences + ' occurrences', yours: true});
+    this.eventAggregator.publish(Events.CheckTile, { 'letter': checkTileResponse.letter, 'occurrences': checkTileResponse.occurrences });
+
   }
 
   private async handleNewGameStarted(newGameStarted: NewGameStartedResponse) {
@@ -152,12 +172,12 @@ export class Game {
     }
     if (!opponentCheckedTileResponse.isCorrect)
     {
-      this.historyItems.push('Opponent correctly guessed letter ' + opponentCheckedTileResponse.letter);
+      this.historyItems.push({ item: 'Opponent correctly guessed letter ' + opponentCheckedTileResponse.letter, yours: false});
       this.gameService.nextTurn();
     }
     else
     {
-      this.historyItems.push('Opponent incorrectly guessed letter ' + opponentCheckedTileResponse.letter);
+      this.historyItems.push({ item: 'Opponent incorrectly guessed letter ' + opponentCheckedTileResponse.letter, yours: false});
     }
   }
 
@@ -183,7 +203,7 @@ export class Game {
       return;
     }
 
-    this.historyItems.push('Opponent incorrectly guessed letter ' + opponentGuessedLetterIncorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterIncorrectlyResponse.position + 1));
+    this.historyItems.push({ item: 'Opponent incorrectly guessed letter ' + opponentGuessedLetterIncorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterIncorrectlyResponse.position + 1), yours: false});
     this.gameService.nextTurn();
   }
 
@@ -193,7 +213,7 @@ export class Game {
       return;
     }
 
-    this.historyItems.push('Opponent correctly guessed the letter ' + opponentGuessedLetterCorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterCorrectlyResponse.position + 1));
+    this.historyItems.push({ item: 'Opponent correctly guessed the letter ' + opponentGuessedLetterCorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterCorrectlyResponse.position + 1), yours: false});
 
     if (opponentGuessedLetterCorrectlyResponse.isGameOver) {
       this.winner = this.gameService.gameState.yourPlayerIndex === 0 ? 'player2' : 'player1';
@@ -212,7 +232,7 @@ export class Game {
       return;
     }
 
-    this.historyItems.push('Opponent incorrectly guessed word ' + opponentGuessedWordIncorrectlyResponse.word);
+    this.historyItems.push({ item: 'Opponent incorrectly guessed word ' + opponentGuessedWordIncorrectlyResponse.word, yours: false});
     this.gameService.nextTurn();
   }
 
@@ -222,7 +242,7 @@ export class Game {
       return;
     }
 
-    this.historyItems.push('Opponent correctly guessed the word ' + opponentGuessedWordCorrectlyResponse.word);
+    this.historyItems.push({ item: 'Opponent correctly guessed the word ' + opponentGuessedWordCorrectlyResponse.word, yours: false});
 
     if (opponentGuessedWordCorrectlyResponse.isGameOver) {
       this.winner = this.gameService.gameState.yourPlayerIndex === 0 ? 'player2' : 'player1';
