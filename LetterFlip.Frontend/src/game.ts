@@ -1,6 +1,6 @@
 import { autoinject } from 'aurelia-framework';
 import { BabylonService } from "babylon-service";
-import { CheckTileResponse, GuessLetterResponse, GuessWordResponse, NewGameStartedResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SignalRService } from 'signalr-service';
+import { CheckTileResponse, GuessLetterResponse, GuessWordResponse, NewGameStartedResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SendMessageResponse, SignalRService } from 'signalr-service';
 import { Router } from 'aurelia-router';
 import { GameService } from 'game-service';
 import { Events } from 'utils/events';
@@ -10,6 +10,7 @@ import { GameOverEventData, GuessLetterCorrectEventData, GuessWordCorrectEventDa
 export interface HistoryItem {
   item: string;
   yours: boolean;
+  type?: string;
 }
 
 @autoinject
@@ -29,6 +30,7 @@ export class Game {
     guessedLetter = '';
     guessedWord = '';
     guessedPosition = 0;
+    message = '';
   guessedPositions = [];
   isNewGameRequested = false;
   showLastActionToast = true;
@@ -109,6 +111,7 @@ export class Game {
     this.signalRService.onOpponentGuessedWordIncorrectlyResponse(this.handleOpponentGuessWordIncorrectly.bind(this));
     this.signalRService.onNewGameStartedResponse(this.handleNewGameStarted.bind(this));
     this.signalRService.onCheckTileResponse(this.handleCheckTileResponse.bind(this));
+    this.signalRService.onSendMessageResponse(this.handleSendMessageResponse.bind(this));
   }
 
   deactivate() {
@@ -122,6 +125,20 @@ export class Game {
     canvas.width = window.innerWidth - 40;
     canvas.height = window.innerHeight - 40;
     this.babylonService.initialize(canvas, this.signalRService, this.eventAggregator);
+  }
+
+  sendMessage() {
+    this.historyItems.push({ item: this.message, yours: true, type: 'Message' });
+    this.signalRService.sendMessage(this.message, this.gameService.gameState.gameId);
+  }
+
+  private async handleSendMessageResponse(sendMessageResponse: SendMessageResponse) {
+    if (sendMessageResponse.gameId !== this.gameService.gameState.gameId)
+    {
+      return;
+    }
+
+    this.historyItems.push({ item: sendMessageResponse.message, yours: false, type: 'Message' });
   }
 
   private async handleCheckTileResponse(checkTileResponse: CheckTileResponse) {

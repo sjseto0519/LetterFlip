@@ -68,6 +68,11 @@ export interface NewGameStartedResponse {
   opponentWord: string;
 }
 
+export interface SendMessageResponse {
+  gameId: string;
+  message: string;
+}
+
 export class SignalRService {
     private connection: DualHubConnection;
   
@@ -105,6 +110,10 @@ export class SignalRService {
 
     public async requestNewGame(gameId: string) {
       await this.connection.invoke(MessageType.NewGame, gameId);
+    }
+
+    public async sendMessage(message: string, gameId: string) {
+      await this.connection.invoke(MessageType.SendMessage, message, gameId);
     }
 
     public addCreatedGameListener(callback: (gameResponse: GameResponse) => void) {
@@ -154,6 +163,10 @@ export class SignalRService {
 
     public onNewGameStartedResponse(callback: (onNewGameStartedResponse: NewGameStartedResponse) => void) {
       this.connection.on(MessageType.NewGameStarted, callback, DataType.NewGameStartedResponse);
+    }
+
+    public onSendMessageResponse(callback: (messageResponse: SendMessageResponse) => void) {
+      this.connection.on(MessageType.SendMessageResponse, callback, DataType.SendMessageResponse);
     }
   }
   

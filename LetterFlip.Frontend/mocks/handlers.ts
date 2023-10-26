@@ -1,7 +1,7 @@
 import { MessageType } from 'dual-hub-connection'
 import { InvokeMessagesResponse } from 'mock-hub-connection-builder'
 import { http, HttpResponse } from 'msw'
-import { CheckTileResponse, GameResponse, GuessLetterResponse, GuessWordResponse, JoinGameResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse } from 'signalr-service'
+import { CheckTileResponse, GameResponse, GuessLetterResponse, GuessWordResponse, JoinGameResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SendMessageResponse } from 'signalr-service'
 
 export interface HandlerRequestBody {
   params: any[];
@@ -95,6 +95,17 @@ export const handlers = [
             isCorrect: guessLetterScenarioIndex === 0 ? true : false
           };
           return HttpResponse.json(guessWordResponse);
+        }
+        else if (postId === MessageType.SendMessage) {
+          const sendMessageResponse: InvokeMessagesResponse = {
+            messages: [
+              {
+                messageName: MessageType.SendMessageResponse,
+                delay: 500
+              }
+            ]
+          };
+          return HttpResponse.json(sendMessageResponse);
         }
         else if (postId === MessageType.CheckTile) {
           const checkTileResponse: InvokeMessagesResponse = {
@@ -190,6 +201,13 @@ export const handlers = [
             isCorrect: false
           };
           return HttpResponse.json(opponentCheckedTileResponse);
+        }
+        else if (postId === MessageType.SendMessageResponse) {
+          const sendMessageResponse: SendMessageResponse = {
+            message: 'Hello world!',
+            gameId
+          };
+          return HttpResponse.json(sendMessageResponse);
         }
         else
         {
