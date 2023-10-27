@@ -1,8 +1,6 @@
 ﻿using LetterFlip.Backend.Models;
 using LetterFlip.Backend.Services;
 using Microsoft.AspNetCore.SignalR;
-using Newtonsoft.Json;
-using System.Diagnostics.Metrics;
 
 namespace LetterFlip.Backend.SignalR
 {
@@ -23,9 +21,10 @@ namespace LetterFlip.Backend.SignalR
             if (tileResponse == null)
             {
                 await Clients.Caller.SendAsync(ResponseType.CheckTileFailedResponse);
+                return;
             }
 
-            await Clients.Caller.SendAsync(ResponseType.CheckTileResponse, tileResponse);
+            await Clients.Caller.SendAsync(ResponseType.CheckTileResponse, tileResponse.GameId, tileResponse.Letter, tileResponse.Occurrences);
 
             await Clients.AllExcept(Context.ConnectionId).SendAsync(ResponseType.OpponentCheckedTile, gameId, letter, tileResponse.Occurrences > 0);
         }
@@ -38,17 +37,18 @@ namespace LetterFlip.Backend.SignalR
             if (game == null)
             {
                 await Clients.Caller.SendAsync(ResponseType.CreateGameFailedResponse);
+                return;
             }
 
             if (game is JoinGameResponse joinGameResponse)
             {
                 await Clients.Caller.SendAsync(ResponseType.JoinedGame, gameId, joinGameResponse.PlayerName, joinGameResponse.OpponentWord);
             
-                await Clients.AllExcept(Context.ConnectionId).SendAsync(ResponseType.PlayerJoined, gameId, joinGameResponse.PlayerName, joinGameResponse.YourWord);
+                await Clients.AllExcept(Context.ConnectionId).SendAsync(ResponseType.PlayerJoined, gameId, playerName, joinGameResponse.YourWord);
             }
             else if (game is GameResponse gameResponse)
             {
-                await Clients.Caller.SendAsync(ResponseType.CreatedGame, gameId, gameResponse.PlayerName);
+                await Clients.Caller.SendAsync(ResponseType.CreatedGame, gameId, gameResponse.PlayerName, "");
             }
         }
 
@@ -82,6 +82,7 @@ namespace LetterFlip.Backend.SignalR
             if (guessLetterResponse == null)
             {
                 await Clients.Caller.SendAsync(ResponseType.GuessLetterFailedResponse);
+                return;
             }
 
             await Clients.Caller.SendAsync(ResponseType.GuessLetterResponse, guessLetterResponse.GameId, guessLetterResponse.Letter, guessLetterResponse.Position, guessLetterResponse.IsCorrect);
@@ -103,6 +104,7 @@ namespace LetterFlip.Backend.SignalR
             if (guessWordResponse == null)
             {
                 await Clients.Caller.SendAsync(ResponseType.GuessWordFailedResponse);
+                return;
             }
 
             await Clients.Caller.SendAsync(ResponseType.GuessWordResponse, guessWordResponse.GameId, guessWordResponse.Word, guessWordResponse.IsCorrect, guessWordResponse.IsGameOver);
@@ -124,6 +126,7 @@ namespace LetterFlip.Backend.SignalR
             if (game == null)
             {
                 await Clients.Caller.SendAsync(ResponseType.NewGameFailedResponse);
+                return;
             }
 
             await Clients.Caller.SendAsync(ResponseType.NewGameStarted, game.Value.YourGame.GameId, game.Value.YourGame.OpponentWord);

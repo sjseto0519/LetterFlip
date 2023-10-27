@@ -88,7 +88,7 @@ export class SignalRService {
     constructor() {
       const mockConnectionBuilder = new MockHubConnectionBuilder();
       const connectionBuilder = new RealHubConnectionBuilder("https://localhost:7213/gamehub");
-      this.connection = new DualHubConnection(mockConnectionBuilder);
+      this.connection = new DualHubConnection(connectionBuilder);
     }
   
     public startConnection = async () => {
@@ -147,7 +147,7 @@ export class SignalRService {
 
     // Inside SignalRService
     public onCheckTileResponse(callback: (checkTileResponse: CheckTileResponse) => void) {
-        this.connection.on(MessageType.CheckTileResponse, callback, DataType.GameResponse);
+        this.connection.on(MessageType.CheckTileResponse, callback, DataType.CheckTileResponse);
     }
 
     public onGuessLetterResponse(callback: (guessLetterResponse: GuessLetterResponse) => void) {

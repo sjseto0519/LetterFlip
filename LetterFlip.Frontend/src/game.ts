@@ -283,6 +283,7 @@ detached() {
     this.gameService.newGame(this.gameService.gameState.gameId, this.gameService.gameState.yourPlayerIndex === 0 ? 1 : 0, this.playerName, this.otherPlayerName, newGameStarted.opponentWord);
     const data: NewGameStartedEventData = {};
     this.eventAggregator.publish(Events.NewGameStarted, data);
+    this.isNewGameRequested = false;
     this.toggleGameOverModal();
   }
 
@@ -423,7 +424,7 @@ detached() {
     this.historyItems.push({ item: 'Opponent correctly guessed the word ' + opponentGuessedWordCorrectlyResponse.word, yours: false});
 
     if (opponentGuessedWordCorrectlyResponse.isGameOver) {
-      this.winner = this.gameService.gameState.yourPlayerIndex === 0 ? 'player2' : 'player1';
+      this.winner = 'player2';
       this.toggleGameOverModal();
       const data: GameOverEventData = { winner: this.winner };
       this.eventAggregator.publish(Events.GameOver, data);

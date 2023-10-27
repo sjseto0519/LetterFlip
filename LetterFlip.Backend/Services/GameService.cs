@@ -68,8 +68,24 @@ namespace LetterFlip.Backend.Services
             {
                 var wordToMatch = opponentGame.OpponentWord;
                 bool isGameOver = wordToMatch.Length == 6;
-                var newWord = isGameOver ? null : AdaptiveWordProvider.GetRandomWord((Enumerations.DifficultyType)(wordToMatch.Length + 1));
-                
+                int newLength = wordToMatch.Length + 1;
+                var newWord = isGameOver ? null : AdaptiveWordProvider.GetRandomWord((Enumerations.DifficultyType)newLength);
+                var isCorrect = word == wordToMatch;
+
+                if (isCorrect && !isGameOver)
+                {
+                    var game = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
+                        && g.PlayerIndex == playerIndex);
+
+                    if (game != null)
+                    {
+                        game.CurrentDifficulty++;
+                        game.WordView = new string('_', game.CurrentDifficulty);
+
+                        await _context.SaveChangesAsync();
+                    }
+                }
+
                 if (newWord != null)
                 {
                     opponentGame.OpponentWord = newWord;
@@ -81,7 +97,7 @@ namespace LetterFlip.Backend.Services
                     GameId = gameId,
                     Word = word,
                     NewWord = newWord,
-                    IsCorrect = word == wordToMatch,
+                    IsCorrect = isCorrect,
                     IsGameOver = isGameOver
                 };
             }
@@ -121,12 +137,15 @@ namespace LetterFlip.Backend.Services
                     GameId = gameId,
                     WordView = "____",
                     InProgress = true,
-                    Player1Name = playerName,
-                    Player2Name = "",
+                    Player1Name = "",
+                    Player2Name = playerName,
                     PlayerIndex = 1,
                     GameState = "",
                     OpponentWord = AdaptiveWordProvider.GetRandomWord(Enumerations.DifficultyType.Easy),
                 };
+
+                _context.Games.Add(game1);
+                _context.Games.Add(game2);
 
                 await _context.SaveChangesAsync();
 
@@ -140,18 +159,22 @@ namespace LetterFlip.Backend.Services
 
 
             var foundGame = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
-                && g.Player2Name == ""
+                && g.Player1Name == ""
                 && g.PlayerIndex == 1);
 
             if (foundGame != null)
             {
+                if (game.Player2Name == "")
+                {
+                    game.Player2Name = playerName;
+                }
 
-                foundGame.Player2Name = playerName;
+                foundGame.Player1Name = playerName;
                 await _context.SaveChangesAsync();
 
                 return new JoinGameResponse
                 {
-                    PlayerName = foundGame.Player1Name,
+                    PlayerName = foundGame.Player2Name,
                     OpponentWord = foundGame.OpponentWord,
                     YourWord = game.OpponentWord,
                 };
@@ -185,8 +208,8 @@ namespace LetterFlip.Backend.Services
             var newWordOpponent = this.AdaptiveWordProvider.GetRandomWord(Enumerations.DifficultyType.Easy);
 
             var game = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
-                && g.Player1Name == playerName
-                && g.Player2Name == otherPlayerName
+                && g.Player1Name == otherPlayerName
+                && g.Player2Name == playerName
                 && g.PlayerIndex == otherPlayerIndex);
 
             var opponentGame = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
@@ -201,6 +224,8 @@ namespace LetterFlip.Backend.Services
 
             game.OpponentWord = newWord;
             opponentGame.OpponentWord = newWordOpponent;
+
+            await _context.SaveChangesAsync();
 
             var a = new NewGameStartedResponse
             {

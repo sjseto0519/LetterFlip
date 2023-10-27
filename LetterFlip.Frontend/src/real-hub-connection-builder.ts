@@ -40,6 +40,7 @@ export class RealHubConnectionBuilder implements IHubConnectionBuilder {
             .withUrl(url)
             .withAutomaticReconnect()
             .build();
+        this.hubConnection.serverTimeoutInMilliseconds = 100000;
     }
 
     async start() {
@@ -54,7 +55,7 @@ export class RealHubConnectionBuilder implements IHubConnectionBuilder {
         const propertyNames = this.dataTypeMap.get(dataType) || [];
         this.hubConnection.on(methodName, (...args) => {
           if (args.length !== propertyNames.length) {
-            throw new Error(`Property name length must match the number of arguments: ${args.length}`);
+            console.error(`Property name length must match the number of arguments: ${args.length}`);
           }
           const data = propertyNames.reduce((acc, propName, index) => {
             acc[propName] = args[index];

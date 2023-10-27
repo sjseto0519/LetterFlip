@@ -11,7 +11,7 @@ import { Game } from 'game';
 import { GameService } from 'game-service';
 import { EventAggregator } from 'utils/event-aggregator';
 import { Events } from 'utils/events';
-import { CheckTileEventData, NewGameStartedEventData } from 'interfaces/event-data';
+import { CheckTileEventData, GuessWordCorrectEventData, NewGameStartedEventData } from 'interfaces/event-data';
 
 export interface WallUnit {
     wall: Mesh;
@@ -53,6 +53,9 @@ export class BabylonService {
     this.setupOverlay();
     this.setupCallbacks(eventAggregator);
     eventAggregator.subscribe<NewGameStartedEventData>(Events.NewGameStarted, 'babylon-service', () => {
+      this.unflipAll();
+    })
+    eventAggregator.subscribe<GuessWordCorrectEventData>(Events.GuessWordCorrect, 'babylon-service', () => {
       this.unflipAll();
     })
 
@@ -270,6 +273,10 @@ export class BabylonService {
           {
             return;
           }
+          if (tile.asterisksStr.length > 0)
+          {
+            return;
+          }
           signalRService.checkTile(tile.letter, this.gameService.gameState.yourPlayerIndex, this.gameService.gameState.gameId);
         }
       )
@@ -320,12 +327,12 @@ export class BabylonService {
     tile.incrementAsterisks();
   
     // Step 2: Create a new plane mesh for the asterisk
-    const asteriskPlane = MeshBuilder.CreateBox("asteriskPlane", { width: 0.5, height: 0.5, depth: 0.1 }, this.scene);
+    const asteriskPlane = MeshBuilder.CreateBox("asteriskPlane", { width: 0.5, height: 0.3, depth: 0.1 }, this.scene);
   
     // Step 3: Create a texture with the asterisk symbol
     const asteriskTexture = new DynamicTexture("asteriskTexture", { width: 128, height: 128 }, this.scene);
     const font = "bold 65px monospace";
-    asteriskTexture.drawText(tile.asterisksStr, 5, 70, font, "black", "white", true, true);
+    asteriskTexture.drawText(tile.asterisksStr, 5, 75, font, "black", "white", true, true);
   
     // Create and set material for the asterisk
     const pbrMaterial = this.createPBRMaterial(this.scene);
@@ -333,9 +340,13 @@ export class BabylonService {
     asteriskPlane.material = pbrMaterial;
   
     // Step 4: Position the asterisk at the top of the tile
-    const yOffset = 0.1 + 0.2 * tile.asterisksStr.length;  // Calculate the offset based on the number of asterisks
-    asteriskPlane.position = new Vector3(tile.box.position.x, tile.box.position.y + yOffset, tile.box.position.z);
+    asteriskPlane.position = new Vector3(tile.box.position.x, tile.box.position.y + 0.3, tile.box.position.z);
   
+    if (tile.asterisks) {
+      this.scene.removeMesh(tile.asterisks);
+      tile.asterisks.dispose();
+    }
+
     tile.asterisks = asteriskPlane;
   }  
 }

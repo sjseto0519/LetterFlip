@@ -22,7 +22,11 @@ namespace LetterFlip.Backend
             // For Entity Framework
             builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(configuration.GetConnectionString("ConnStr")));
 
-            builder.Services.AddSignalR();
+            builder.Services.AddSignalR((options) =>
+            {
+                options.KeepAliveInterval = TimeSpan.FromSeconds(120);
+                options.ClientTimeoutInterval = TimeSpan.FromSeconds(120);
+            });
             builder.Services.AddSingleton<IAdaptiveWordProvider, AdaptiveWordProvider>();
             builder.Services.AddScoped<IGameService, GameService>();
 
