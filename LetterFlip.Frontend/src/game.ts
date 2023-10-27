@@ -90,7 +90,7 @@ export class Game {
       gameState: this.gameService.gameState
     };
     const str = JSON.stringify(savedGame);
-    this.signalRService.saveGame(str);
+    this.signalRService.saveGame(savedGame.gameData, str);
     localStorage.setItem('savedGame', str);
   }
 

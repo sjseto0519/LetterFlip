@@ -12,7 +12,7 @@ namespace LetterFlip.Backend.Services
             _context = context;
         }
 
-        public async Task<GameResponseBase> JoinOrCreateGameAsync(string userName, string gameId)
+        public async Task<GameResponseBase> JoinOrCreateGameAsync(string playerName, string gameId)
         {
             //var game = await _context.Games.FindAsync(gameId);
 
@@ -38,7 +38,7 @@ namespace LetterFlip.Backend.Services
             };
         }
 
-        public async Task<OpponentCheckedTileResponse> CreateOpponentCheckedTileResponse()
+        public async Task<OpponentCheckedTileResponse> CreateOpponentCheckedTileResponseAsync()
         {
             return new OpponentCheckedTileResponse()
             {
@@ -46,6 +46,83 @@ namespace LetterFlip.Backend.Services
                 Letter = "A",
                 IsCorrect = true
             };
+        }
+
+        public async Task<OpponentGuessedLetterCorrectlyResponse> CreateOpponentGuessedLetterCorrectlyResponseAsync()
+        {
+            return new OpponentGuessedLetterCorrectlyResponse()
+            {
+                GameId = "",
+                Letter = "A",
+                Position = 0,
+                NewWordView = new[] { "" },
+                IsGameOver = false
+            };
+        }
+
+        public async Task<OpponentGuessedWordCorrectlyResponse> CreateOpponentGuessedWordCorrectlyResponseAsync()
+        {
+            return new OpponentGuessedWordCorrectlyResponse()
+            {
+                GameId = "",
+                Word = "EXAMPLE",
+                NewWord = "EXAMPLE",
+                IsGameOver = false
+            };
+        }
+
+        public async Task<OpponentGuessedLetterIncorrectlyResponse> CreateOpponentGuessedLetterIncorrectlyResponseAsync()
+        {
+            return new OpponentGuessedLetterIncorrectlyResponse()
+            {
+                GameId = "",
+                Letter = "A",
+                Position = 0
+            };
+        }
+
+        public async Task<OpponentGuessedWordIncorrectlyResponse> CreateOpponentGuessedWordIncorrectlyResponseAsync()
+        {
+            return new OpponentGuessedWordIncorrectlyResponse()
+            {
+                GameId = "",
+                Word = "EXAMPLE"
+            };
+        }
+
+        public Task<CheckTileResponse> CheckTileAsync(string letter, int playerIndex, string gameId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<GuessLetterResponse> GuessLetterAsync(string letter, int wordIndex, int playerIndex, string gameId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<GuessWordResponse> GuessWordAsync(string word, int playerIndex, string gameId)
+        {
+            throw new NotImplementedException();
+        }
+
+        Task<Game> IGameService.JoinOrCreateGameAsync(string playerName, string gameId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<LoadGameResponse> LoadGameAsync(string playerName, string otherPlayerName, int playerIndex)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task<NewGameStartedResponse> NewGameAsync(string gameId)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Task SaveGameAsync(string gameId, string playerName, string otherPlayerName, int playerIndex, string savedGame)
+        {
+            throw new NotImplementedException();
         }
     }
 }

@@ -105,8 +105,8 @@ export class SignalRService {
       await this.connection.invoke(MessageType.LoadGame, gameData.playerName, gameData.otherPlayerName, gameData.playerIndex);
     }
 
-    public async saveGame(savedGame: string) {
-      await this.connection.invoke(MessageType.SaveGame, savedGame);
+    public async saveGame(gameData: GameData, savedGame: string) {
+      await this.connection.invoke(MessageType.SaveGame, gameData.gameId, gameData.playerName, gameData.otherPlayerName, gameData.playerIndex, savedGame);
     }
 
     public async joinGame(userName: string, gameId: string) {
