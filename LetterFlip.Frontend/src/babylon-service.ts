@@ -59,7 +59,7 @@ export class BabylonService {
     this.engine.runRenderLoop(() => {
         // Update the skybox position to match the camera's position
         this.skybox.position = this.camera.position;
-        this.text.text = `${this.gameService.gameState.currentPlayerName()}'s Turn\nOpponent's Word:\n${this.gameService.gameState.getOpponentPlayerState()?.currentWord}\nYour Word:\n${this.gameService.gameState.getYourPlayerState().wordView?.join(' ')}`;
+        this.text.text = `${this.gameService.gameState.currentPlayerName()}'s Turn\nOpponent's Word:\n${this.gameService.gameState.getOpponentPlayerState()?.currentWord}\nYour Word:\n${this.gameService.gameState.getYourPlayerState()?.wordView?.join(' ')}`;
   
         if (this.selectedTile) {
           this.selectedTile.update();
@@ -86,7 +86,7 @@ export class BabylonService {
         this.gameService.flipLetter(checkTileResponse.letter);
         this.selectedTile.flip();
       } else {
-        let diff = checkTileResponse.occurrences - this.selectedTile.numberOfAsterisks;
+        let diff = checkTileResponse.occurrences - this.selectedTile.asterisksStr.length;
         while (diff--) {
           this.addAsteriskToTile(this.selectedTile);
         }
@@ -103,7 +103,7 @@ export class BabylonService {
     this.display = new HolographicButton("down");
     manager.addControl(this.display);
     this.display.position.y = -2;
-    this.display.position.x = -5;
+    this.display.position.x = -4.5;
     this.display.scaling = new Vector3(2, 2, 2);
 
     const overlayMaterial = new StandardMaterial("overlay", this.scene);
@@ -147,6 +147,11 @@ export class BabylonService {
   private unflipAll() {
     this.tiles.forEach((tile) => {
       tile.unflip();
+      if (tile.asterisks) {
+        this.scene.removeMesh(tile.asterisks);
+        tile.asterisks.dispose();
+        tile.asterisksStr = '';
+      }
     });
   }
 
@@ -319,8 +324,8 @@ export class BabylonService {
   
     // Step 3: Create a texture with the asterisk symbol
     const asteriskTexture = new DynamicTexture("asteriskTexture", { width: 128, height: 128 }, this.scene);
-    const font = "bold 100px monospace";
-    asteriskTexture.drawText("*", 0, 0, font, "black", "white", true, true);
+    const font = "bold 65px monospace";
+    asteriskTexture.drawText(tile.asterisksStr, 5, 70, font, "black", "white", true, true);
   
     // Create and set material for the asterisk
     const pbrMaterial = this.createPBRMaterial(this.scene);
@@ -328,10 +333,9 @@ export class BabylonService {
     asteriskPlane.material = pbrMaterial;
   
     // Step 4: Position the asterisk at the top of the tile
-    const yOffset = 0.1 + 0.2 * tile.numberOfAsterisks;  // Calculate the offset based on the number of asterisks
+    const yOffset = 0.1 + 0.2 * tile.asterisksStr.length;  // Calculate the offset based on the number of asterisks
     asteriskPlane.position = new Vector3(tile.box.position.x, tile.box.position.y + yOffset, tile.box.position.z);
   
-    // Step 5: Parent the asterisk to the tile so that they move together
-    // asteriskPlane.setParent(tile.box);
+    tile.asterisks = asteriskPlane;
   }  
 }

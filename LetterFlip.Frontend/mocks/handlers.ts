@@ -1,7 +1,7 @@
 import { MessageType } from 'dual-hub-connection'
 import { InvokeMessagesResponse } from 'mock-hub-connection-builder'
 import { http, HttpResponse } from 'msw'
-import { CheckTileResponse, GameResponse, GuessLetterResponse, GuessWordResponse, JoinGameResponse, LoadGameResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SendMessageResponse } from 'signalr-service'
+import { CheckTileResponse, GameResponse, GuessLetterResponse, GuessWordResponse, JoinGameResponse, LoadGameResponse, NewGameStartedResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SendMessageResponse } from 'signalr-service'
 
 export interface HandlerRequestBody {
   params: any[];
@@ -15,6 +15,7 @@ export const handlers = [
         const guessLetterScenarioIndex = 0;
         const yourWord = "MILE";
         const opponentWord = "EXAM";
+        const newGameOpponentWord = "JUMP";
 
         const { postId } = params
         const requestBody: HandlerRequestBody = await request.json() as HandlerRequestBody;
@@ -131,6 +132,24 @@ export const handlers = [
             ]
           };
           return HttpResponse.json(checkTileResponse);
+        }
+        else if (postId === MessageType.NewGame) {
+          const newGameResponse: InvokeMessagesResponse = {
+            messages: [
+              {
+                messageName: MessageType.NewGameStarted,
+                delay: 500
+              },
+            ]
+          };
+          return HttpResponse.json(newGameResponse);
+        }
+        else if (postId === MessageType.NewGameStarted) {
+          const newGameStartedResponse: NewGameStartedResponse = {
+            gameId,
+            opponentWord: newGameOpponentWord
+          };
+          return HttpResponse.json(newGameStartedResponse);
         }
         else if (postId === MessageType.CheckTileResponse)
         {

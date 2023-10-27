@@ -13,7 +13,7 @@
         </div>
   
         <!-- Right: Buttons -->
-        <div class="space-x-4">
+        <div class="space-x-4 flex overflow-auto">
           <button click.delegate="toggleHistory()" class="btn btn-accent">History</button>
           <button disabled.bind="gameService.gameState.currentTurn === (gameService.gameState.yourPlayerIndex === 0 ? 'player2' : 'player1')" click.delegate="toggleGuessLetterModal()" class="btn btn-accent">Guess a Letter</button>
           <button disabled.bind="gameService.gameState.currentTurn === (gameService.gameState.yourPlayerIndex === 0 ? 'player2' : 'player1')" click.delegate="toggleGuessWordModal()" class="btn btn-accent">Guess a Word</button>
@@ -108,7 +108,7 @@
   </div>
 </div>
 <div class="fixed bottom-4 right-4 z-50" if.bind="hasTypelessElement">
-  <div class="alert shadow-lg">
+  <div class="alert shadow-lg" style="grid-auto-flow: column">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
     </svg>

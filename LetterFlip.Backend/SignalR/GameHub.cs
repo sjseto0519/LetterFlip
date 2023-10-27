@@ -26,36 +26,6 @@ namespace LetterFlip.Backend.SignalR
             await Clients.Caller.SendAsync("CheckTileResponse", JsonConvert.SerializeObject(result));
         }
 
-        public async Task JoinOrCreateGame(string playerName, string gameId)
-        {
-            if (string.IsNullOrWhiteSpace(playerName))
-            {
-                throw new ArgumentException("Player name cannot be empty.", nameof(playerName));
-            }
-
-            if (string.IsNullOrWhiteSpace(gameId))
-            {
-                throw new ArgumentException("Game ID cannot be empty.", nameof(gameId));
-            }
-
-            if (waitingPlayers.ContainsKey(gameId))
-            {
-                string otherPlayerName = waitingPlayers[gameId];
-                waitingPlayers.Remove(gameId);
-
-                // Send a message back to the client who just joined
-                await Clients.Caller.SendAsync("JoinedGame", gameId, otherPlayerName);
-
-                // Send a message to the player who was waiting
-                await Clients.Client(gameId).SendAsync("PlayerJoined", playerName);
-            }
-            else
-            {
-                waitingPlayers[gameId] = playerName;
-                await Clients.Caller.SendAsync("JoinedGame", gameId, playerName);
-            }
-        }
-
         public async Task JoinOrCreateGame(string gameId)
         {
             var playerName = Context.User.Identity.Name;
