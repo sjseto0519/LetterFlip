@@ -13,7 +13,8 @@ export enum DataType {
     OpponentGuessedLetterIncorrectlyResponse,
     OpponentCheckedTileResponse,
     NewGameStartedResponse,
-    SendMessageResponse
+    SendMessageResponse,
+    LoadGameResponse
 }
 
 export class RealHubConnectionBuilder implements IHubConnectionBuilder {
@@ -22,15 +23,16 @@ export class RealHubConnectionBuilder implements IHubConnectionBuilder {
         [DataType.GameResponse, ['gameId', 'playerName', 'opponentWord']],
         [DataType.JoinGameResponse, ['playerName', 'opponentWord']],
         [DataType.CheckTileResponse, ['gameId', 'letter', 'occurrences']],
-        [DataType.GuessLetterResponse, ['gameId', 'letter', 'isCorrect']],
-        [DataType.GuessWordResponse, ['gameId', 'word', 'isCorrect']],
+        [DataType.GuessLetterResponse, ['gameId', 'letter', 'position', 'isCorrect']],
+        [DataType.GuessWordResponse, ['gameId', 'word', 'isCorrect', 'isGameOver']],
         [DataType.OpponentGuessedWordCorrectlyResponse, ['gameId', 'word', 'newWord', 'isGameOver']],
         [DataType.OpponentGuessedLetterCorrectlyResponse, ['gameId', 'letter', 'position', 'newWordView', 'isGameOver']],
         [DataType.OpponentGuessedWordIncorrectlyResponse, ['gameId', 'word']],
         [DataType.OpponentGuessedLetterIncorrectlyResponse, ['gameId', 'letter', 'position']],
         [DataType.OpponentCheckedTileResponse, ['gameId', 'letter', 'isCorrect']],
         [DataType.NewGameStartedResponse, ['gameId', 'opponentWord']],
-        [DataType.SendMessageResponse, ['gameId', 'message']]
+        [DataType.SendMessageResponse, ['gameId', 'message']],
+        [DataType.LoadGameResponse, ['gameId', 'playerIndex', 'savedGame']]
       ]);
 
     constructor(url: string) {

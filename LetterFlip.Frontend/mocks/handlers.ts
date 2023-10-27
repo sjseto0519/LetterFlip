@@ -1,7 +1,7 @@
 import { MessageType } from 'dual-hub-connection'
 import { InvokeMessagesResponse } from 'mock-hub-connection-builder'
 import { http, HttpResponse } from 'msw'
-import { CheckTileResponse, GameResponse, GuessLetterResponse, GuessWordResponse, JoinGameResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SendMessageResponse } from 'signalr-service'
+import { CheckTileResponse, GameResponse, GuessLetterResponse, GuessWordResponse, JoinGameResponse, LoadGameResponse, NewGameStartedResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SendMessageResponse } from 'signalr-service'
 
 export interface HandlerRequestBody {
   params: any[];
@@ -15,6 +15,7 @@ export const handlers = [
         const guessLetterScenarioIndex = 0;
         const yourWord = "MILE";
         const opponentWord = "EXAM";
+        const newGameOpponentWord = "JUMP";
 
         const { postId } = params
         const requestBody: HandlerRequestBody = await request.json() as HandlerRequestBody;
@@ -52,6 +53,14 @@ export const handlers = [
               {
                 messageName: MessageType.GuessLetterResponse,
                 delay: 500
+              },
+              {
+                messageName: MessageType.OpponentGuessedLetterCorrect,
+                delay: 3000
+              },
+              {
+                messageName: MessageType.OpponentGuessedWordIncorrect,
+                delay: 6000
               }
             ]
           };
@@ -63,7 +72,8 @@ export const handlers = [
           const guessLetterResponse: GuessLetterResponse = {
             gameId,
             letter: requestArray[0],
-            isCorrect: guessLetterScenarioIndex === 0 ? true : false
+            position: parseInt(requestArray[1]),
+            isCorrect: yourWord.indexOf(requestArray[0]) === parseInt(requestArray[1])
           };
           return HttpResponse.json(guessLetterResponse);
         }
@@ -92,7 +102,8 @@ export const handlers = [
           const guessWordResponse: GuessWordResponse = {
             gameId,
             word: requestArray[0],
-            isCorrect: guessLetterScenarioIndex === 0 ? true : false
+            isCorrect: yourWord === requestArray[0],
+            isGameOver: true
           };
           return HttpResponse.json(guessWordResponse);
         }
@@ -121,6 +132,24 @@ export const handlers = [
             ]
           };
           return HttpResponse.json(checkTileResponse);
+        }
+        else if (postId === MessageType.NewGame) {
+          const newGameResponse: InvokeMessagesResponse = {
+            messages: [
+              {
+                messageName: MessageType.NewGameStarted,
+                delay: 500
+              },
+            ]
+          };
+          return HttpResponse.json(newGameResponse);
+        }
+        else if (postId === MessageType.NewGameStarted) {
+          const newGameStartedResponse: NewGameStartedResponse = {
+            gameId,
+            opponentWord: newGameOpponentWord
+          };
+          return HttpResponse.json(newGameStartedResponse);
         }
         else if (postId === MessageType.CheckTileResponse)
         {
@@ -181,7 +210,7 @@ export const handlers = [
             gameId,
             letter: 'E',
             position: 0,
-            newWordView: [ 'E', '', '', '' ],
+            newWordView: ['E', '_', '_', '_'],
             isGameOver: false
           };
           return HttpResponse.json(opponentGuessedLetterCorrectlyResponse);
@@ -208,6 +237,31 @@ export const handlers = [
             gameId
           };
           return HttpResponse.json(sendMessageResponse);
+        }
+        else if (postId === MessageType.SaveGame) {
+          const saveGameResponse: InvokeMessagesResponse = {
+            messages: []
+          };
+          return HttpResponse.json(saveGameResponse);
+        }
+        else if (postId === MessageType.LoadGame) {
+          const loadGameResponse: InvokeMessagesResponse = {
+            messages: [
+              {
+                messageName: MessageType.LoadGameResponse,
+                delay: 100
+              }
+            ]
+          };
+          return HttpResponse.json(loadGameResponse);
+        }
+        else if (postId === MessageType.LoadGameResponse) {
+          const loadGameResponse: LoadGameResponse = {
+            playerIndex: 0,
+            gameId,
+            savedGame: localStorage.getItem('savedGame')
+          };
+          return HttpResponse.json(loadGameResponse);
         }
         else
         {

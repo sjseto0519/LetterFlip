@@ -37,6 +37,7 @@ export class JoinGame {
 
         this.router.navigateToRoute('game', {
           gameId: this.gameId,
+          playerIndex: 1,
           playerName: this.playerName,
           otherPlayerName: this.otherPlayerName
         });
@@ -52,6 +53,7 @@ export class JoinGame {
 
         this.router.navigateToRoute('game', {
           gameId: this.gameId,
+          playerIndex: 0,
           playerName: this.playerName,
           otherPlayerName: joinGameResponse.playerName
         });

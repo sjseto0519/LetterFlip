@@ -11,7 +11,7 @@ export class App {
     let game = PLATFORM.moduleName('game');
     config.map([
       { route: ['', 'join-game'], name: joinGame, moduleId: './join-game', nav: true, title: 'Join Game' },
-      { route: 'game/:gameId/:playerName/:otherPlayerName', name: game, moduleId: './game', nav: false, title: 'Game' }
+      { route: 'game/:gameId/:playerIndex/:playerName/:otherPlayerName', name: game, moduleId: './game', nav: false, title: 'Game' }
     ]);
   }
 }

@@ -1,4 +1,5 @@
 import { DualHubConnection, MessageType } from "dual-hub-connection";
+import { GameData } from "game";
 import { MockHubConnectionBuilder } from "mock-hub-connection-builder";
 import { DataType, RealHubConnectionBuilder } from "real-hub-connection-builder";
 
@@ -22,6 +23,7 @@ export interface CheckTileResponse {
 export interface GuessLetterResponse {
   gameId: string;
   letter: string;
+  position: number;
   isCorrect: boolean;
 }
 
@@ -29,6 +31,7 @@ export interface GuessWordResponse {
   gameId: string;
   word: string;
   isCorrect: boolean;
+  isGameOver: boolean;
 }
 
 export interface OpponentGuessedWordCorrectlyResponse {
@@ -73,6 +76,12 @@ export interface SendMessageResponse {
   message: string;
 }
 
+export interface LoadGameResponse {
+  gameId: string;
+  playerIndex: number;
+  savedGame: string;
+}
+
 export class SignalRService {
     private connection: DualHubConnection;
   
@@ -91,6 +100,14 @@ export class SignalRService {
         console.log("Error while starting connection: " + e);
       }
     };
+
+    public async loadGame(gameData: GameData) {
+      await this.connection.invoke(MessageType.LoadGame, gameData.playerName, gameData.otherPlayerName, gameData.playerIndex);
+    }
+
+    public async saveGame(savedGame: string) {
+      await this.connection.invoke(MessageType.SaveGame, savedGame);
+    }
 
     public async joinGame(userName: string, gameId: string) {
         await this.connection.invoke(MessageType.JoinOrCreateGame, userName, gameId);
@@ -167,6 +184,10 @@ export class SignalRService {
 
     public onSendMessageResponse(callback: (messageResponse: SendMessageResponse) => void) {
       this.connection.on(MessageType.SendMessageResponse, callback, DataType.SendMessageResponse);
+    }
+
+    public onLoadGameResponse(callback: (loadGameResponse: LoadGameResponse) => void) {
+      this.connection.on(MessageType.LoadGameResponse, callback, DataType.LoadGameResponse);
     }
   }
   

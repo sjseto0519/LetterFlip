@@ -12,6 +12,7 @@ export interface ISubscriberContainer {
 
 export interface GuessLetterCorrectEventData extends IData {
     letter: string;
+    position: number;
 }
 
 export interface GuessWordCorrectEventData extends IData {

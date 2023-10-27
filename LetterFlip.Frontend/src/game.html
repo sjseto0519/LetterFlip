@@ -13,7 +13,7 @@
         </div>
   
         <!-- Right: Buttons -->
-        <div class="space-x-4">
+        <div class="space-x-4 flex overflow-auto">
           <button click.delegate="toggleHistory()" class="btn btn-accent">History</button>
           <button disabled.bind="gameService.gameState.currentTurn === (gameService.gameState.yourPlayerIndex === 0 ? 'player2' : 'player1')" click.delegate="toggleGuessLetterModal()" class="btn btn-accent">Guess a Letter</button>
           <button disabled.bind="gameService.gameState.currentTurn === (gameService.gameState.yourPlayerIndex === 0 ? 'player2' : 'player1')" click.delegate="toggleGuessWordModal()" class="btn btn-accent">Guess a Word</button>
@@ -30,6 +30,16 @@
     <div class="drawer-side mt-[5rem]">
       <label for="history-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
       <ul class="menu p-4 w-80 min-h-full bg-base-200 text-base-content">
+        <li class="pt-2">
+          <div class="flex items-center bg-white rounded-lg shadow-lg">
+            <input value.bind="message" class="flex-1 p-2 rounded-l-lg" type="text" placeholder="Type your message...">
+            <button click.delegate="sendMessage()" class="bg-blue-500 p-2 rounded-r-lg text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
+              </svg>
+            </button>
+          </div>          
+        </li>
         <li repeat.for="item of reversedHistory" class="hover:bg-gray-200 rounded p-2 text-center">
           <div class="alert shadow-lg">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6">
@@ -39,21 +49,13 @@
               <h3 class="font-bold">${item.yours ? 'Your Action' : 'Opponent Action'}</h3>
               <div class="text-xs" style="text-wrap: pretty">${item.item}</div>
             </div>
-            <div if.bind="item.type" class="chat ${item.yours ? 'chat-start' : 'chat-end'}">
+            <div if.bind="item.type" class="chat ${item.yours ? 'chat-start' : 'chat-end w-full'}">
               <div class="chat-header">
                 ${item.yours ? 'Your' : 'Opponent'} ${item.type}
               </div>
-              <div class="chat-bubble">${item.item}</div>
+              <div class="chat-bubble !bg-blue-500">${item.item}</div>
             </div>
           </div>
-        </li>
-        <li class="pt-2">
-          <div class="form-control">
-            <input value.bind="message" type="text" placeholder="Enter message" class="input input-bordered"> 
-          </div>
-        </li>
-        <li>
-          <button click.delegate="sendMessage()" class="btn btn-primary">Send</button>
         </li>
       </ul>
     </div>
@@ -92,7 +94,7 @@
 <div class="modal modal-open" if.bind="isGameOver">
   <div class="modal-box">
     <h2 class="text-lg">Game Over</h2>
-    <p>${winner} is the winner!</p>
+    <p>${winnerName} is the winner!</p>
     <div class="modal-action">
       <button class="btn btn-primary" disabled.bind="isNewGameRequested" click.delegate="playNewGame()">
         <svg if.bind="isNewGameRequested" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -105,14 +107,14 @@
     </div>
   </div>
 </div>
-<div class="fixed bottom-4 right-4 z-50" if.bind="historyItems.length > 0">
-  <div class="alert shadow-lg">
+<div class="fixed bottom-4 right-4 z-50" if.bind="hasTypelessElement">
+  <div class="alert shadow-lg" style="grid-auto-flow: column">
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
     </svg>
     <div if.bind="showLastActionToast" >
       <h3 class="font-bold">Last Action</h3>
-      <div class="text-xs" style="text-wrap: pretty">${historyItems[historyItems.length - 1].item}</div>
+      <div class="text-xs" style="text-wrap: pretty">${lastElementWithTypeAction.item}</div>
     </div>
     <button class="btn btn-sm" show.bind="showLastActionToast === true" click.delegate="showLastActionToast = false">Hide</button>
     <button class="btn btn-sm" show.bind="showLastActionToast === false" click.delegate="showLastActionToast = true">Show</button>
