@@ -101,7 +101,8 @@ export const handlers = [
           const guessWordResponse: GuessWordResponse = {
             gameId,
             word: requestArray[0],
-            isCorrect: guessLetterScenarioIndex === 0 ? true : false
+            isCorrect: yourWord === requestArray[0],
+            isGameOver: true
           };
           return HttpResponse.json(guessWordResponse);
         }

@@ -52,6 +52,16 @@ export class Game {
   isNewGameRequested = false;
   showLastActionToast = true;
 
+  get winnerName() {
+    if (this.winner) {
+      return this.winner === 'player1' ? this.playerName : this.otherPlayerName;
+    }
+    else
+    {
+      return '';
+    }
+  }
+
   get reversedHistory() {
     return [...this.historyItems].reverse();
   }
@@ -120,7 +130,6 @@ export class Game {
     submitWordGuess() {
       if (this.guessedWord) {
         this.guessedWord = this.guessedWord.toUpperCase();
-        this.historyItems.push({ item: `Guessed the word ${this.guessedWord}`, yours: true});
         this.signalRService.guessWord(this.guessedWord, this.gameService.gameState.yourPlayerIndex, this.gameService.gameState.gameId);
         this.toggleGuessWordModal();
       }
@@ -306,12 +315,25 @@ export class Game {
 
     if (!guessWordResponse.isCorrect)
     {
+      this.historyItems.push({ item: `Incorrectly guessed the word ${guessWordResponse.word}`, yours: true});
       this.gameService.nextTurn();
     }
     else
     {
-      const data: GuessWordCorrectEventData = { word: guessWordResponse.word };
-      this.eventAggregator.publish(Events.GuessWordCorrect, data);
+      if (guessWordResponse.isGameOver) {
+        this.winner = this.gameService.gameState.yourPlayerIndex === 0 ? 'player1' : 'player2';
+        this.toggleGameOverModal();
+        const data: GameOverEventData = { winner: this.winner };
+        this.eventAggregator.publish(Events.GameOver, data);
+      }
+      else {
+        const playerState = this.gameService.gameState.getYourPlayerState();
+        playerState.currentDifficulty++;
+        playerState.wordView = new Array(playerState.currentDifficulty).fill('_');
+        this.historyItems.push({ item: `Correct! The word was ${guessWordResponse.word}`, yours: true});
+        const data: GuessWordCorrectEventData = { word: guessWordResponse.word };
+        this.eventAggregator.publish(Events.GuessWordCorrect, data);
+      }
     }
   }
 

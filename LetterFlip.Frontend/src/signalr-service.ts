@@ -31,6 +31,7 @@ export interface GuessWordResponse {
   gameId: string;
   word: string;
   isCorrect: boolean;
+  isGameOver: boolean;
 }
 
 export interface OpponentGuessedWordCorrectlyResponse {
