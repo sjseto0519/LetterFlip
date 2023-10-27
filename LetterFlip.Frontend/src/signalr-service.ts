@@ -23,6 +23,7 @@ export interface CheckTileResponse {
 export interface GuessLetterResponse {
   gameId: string;
   letter: string;
+  position: number;
   isCorrect: boolean;
 }
 

@@ -52,6 +52,14 @@ export const handlers = [
               {
                 messageName: MessageType.GuessLetterResponse,
                 delay: 500
+              },
+              {
+                messageName: MessageType.OpponentGuessedLetterCorrect,
+                delay: 3000
+              },
+              {
+                messageName: MessageType.OpponentGuessedWordIncorrect,
+                delay: 6000
               }
             ]
           };
@@ -63,7 +71,8 @@ export const handlers = [
           const guessLetterResponse: GuessLetterResponse = {
             gameId,
             letter: requestArray[0],
-            isCorrect: guessLetterScenarioIndex === 0 ? true : false
+            position: parseInt(requestArray[1]),
+            isCorrect: yourWord.indexOf(requestArray[0]) === parseInt(requestArray[1])
           };
           return HttpResponse.json(guessLetterResponse);
         }
@@ -181,7 +190,7 @@ export const handlers = [
             gameId,
             letter: 'E',
             position: 0,
-            newWordView: [ 'E', '', '', '' ],
+            newWordView: ['E', '_', '_', '_'],
             isGameOver: false
           };
           return HttpResponse.json(opponentGuessedLetterCorrectlyResponse);

@@ -59,7 +59,7 @@ export class BabylonService {
     this.engine.runRenderLoop(() => {
         // Update the skybox position to match the camera's position
         this.skybox.position = this.camera.position;
-        this.text.text = `${this.gameService.gameState.currentPlayerName()}'s Turn\nOpponent's Word:\n${this.gameService.gameState.getOpponentPlayerState()?.currentWord}`;
+        this.text.text = `${this.gameService.gameState.currentPlayerName()}'s Turn\nOpponent's Word:\n${this.gameService.gameState.getOpponentPlayerState()?.currentWord}\nYour Word:\n${this.gameService.gameState.getYourPlayerState().wordView?.join(' ')}`;
   
         if (this.selectedTile) {
           this.selectedTile.update();

@@ -108,10 +108,9 @@ export class Game {
   submitLetterGuess() {
     const guessedLetter = this.guessedPositions.find(Boolean);
     if (guessedLetter) {
-      this.historyItems.push({ item: `Guessed the letter ${guessedLetter} at position ${this.guessedPosition + 1}`, yours: true});
+      this.signalRService.guessLetter(guessedLetter, this.guessedPosition, this.gameService.gameState.yourPlayerIndex, this.gameService.gameState.gameId);
+      this.toggleGuessLetterModal();
     }
-    this.signalRService.guessLetter(guessedLetter, this.guessedPosition, this.gameService.gameState.yourPlayerIndex, this.gameService.gameState.gameId);
-    this.toggleGuessLetterModal();
   }
 
     toggleGuessWordModal() {
@@ -120,10 +119,11 @@ export class Game {
 
     submitWordGuess() {
       if (this.guessedWord) {
+        this.guessedWord = this.guessedWord.toUpperCase();
         this.historyItems.push({ item: `Guessed the word ${this.guessedWord}`, yours: true});
+        this.signalRService.guessWord(this.guessedWord, this.gameService.gameState.yourPlayerIndex, this.gameService.gameState.gameId);
+        this.toggleGuessWordModal();
       }
-      this.signalRService.guessWord(this.guessedWord, this.gameService.gameState.yourPlayerIndex, this.gameService.gameState.gameId);
-      this.toggleGuessWordModal();
     }
 
   toggleHistory() {
@@ -262,11 +262,15 @@ export class Game {
 
     if (!guessLetterResponse.isCorrect)
     {
+      this.historyItems.push({ item: `Guessed the letter ${guessLetterResponse.letter} incorrectly at position ${guessLetterResponse.position + 1}`, yours: true});
       this.gameService.nextTurn();
     }
     else
     {
-      const data: GuessLetterCorrectEventData = { letter: guessLetterResponse.letter };
+      this.historyItems.push({ item: `Guessed the letter ${guessLetterResponse.letter} correctly at position ${guessLetterResponse.position + 1}`, yours: true});
+      const state = this.gameService.gameState.getYourPlayerState();
+      state.wordView[guessLetterResponse.position] = guessLetterResponse.letter;
+      const data: GuessLetterCorrectEventData = { letter: guessLetterResponse.letter, position: guessLetterResponse.position };
       this.eventAggregator.publish(Events.GuessLetterCorrect, data);
     }
 
@@ -335,6 +339,8 @@ export class Game {
     {
       return;
     }
+
+    this.gameService.gameState.getOpponentPlayerState().wordView[opponentGuessedLetterCorrectlyResponse.position] = opponentGuessedLetterCorrectlyResponse.letter;
 
     this.historyItems.push({ item: 'Opponent correctly guessed the letter ' + opponentGuessedLetterCorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterCorrectlyResponse.position + 1), yours: false});
 
