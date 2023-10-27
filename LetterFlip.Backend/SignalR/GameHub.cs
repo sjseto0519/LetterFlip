@@ -8,12 +8,10 @@ namespace LetterFlip.Backend.SignalR
 {
     public class GameHub : Hub
     {
-        private readonly IAdaptiveWordProvider adaptiveWordProvider;
         private readonly IGameService gameService;
 
         public GameHub(IAdaptiveWordProvider adaptiveWordProvider, IGameService gameService)
         {
-            this.adaptiveWordProvider = adaptiveWordProvider;
             gameService.AdaptiveWordProvider = adaptiveWordProvider;
             this.gameService = gameService;
         }
@@ -37,15 +35,20 @@ namespace LetterFlip.Backend.SignalR
             //var playerName = Context.User.Identity.Name;
             var game = await gameService.JoinOrCreateGameAsync(playerName, gameId);
 
-            if (string.IsNullOrEmpty(game.Player2Name))
+            if (game == null)
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, gameId);
-                await Clients.Caller.SendAsync("WaitingForOpponent");
+                await Clients.Caller.SendAsync(ResponseType.CreateGameFailedResponse);
             }
-            else
+
+            if (game is JoinGameResponse joinGameResponse)
             {
-                await Groups.AddToGroupAsync(Context.ConnectionId, gameId);
-                await Clients.Group(gameId).SendAsync("GameStarted", game);
+                await Clients.Caller.SendAsync(ResponseType.JoinedGame, gameId, joinGameResponse.PlayerName, joinGameResponse.OpponentWord);
+            
+                await Clients.AllExcept(Context.ConnectionId).SendAsync(ResponseType.PlayerJoined, gameId, joinGameResponse.PlayerName, joinGameResponse.YourWord);
+            }
+            else if (game is GameResponse gameResponse)
+            {
+                await Clients.Caller.SendAsync(ResponseType.CreatedGame, gameId, gameResponse.PlayerName);
             }
         }
 
@@ -144,7 +147,6 @@ namespace LetterFlip.Backend.SignalR
             // Log or debug
             return base.OnDisconnectedAsync(exception);
         }
-
     }
 
 }

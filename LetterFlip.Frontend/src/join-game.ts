@@ -20,12 +20,16 @@ export class JoinGame {
       }
     
       private async handleCreatedGame(gameResponse: GameResponse) {
-        this.gameId = gameResponse.gameId;
           this.waitingForOpponent = true;
       }
 
       private async handleJoinedGame(gameResponse: GameResponse) {
-        this.gameId = gameResponse.gameId;
+
+        if (gameResponse.gameId !== this.gameId)
+        {
+          return;
+        }
+
         this.otherPlayerName = gameResponse.playerName;
     
         // Handle case where another player is already waiting
@@ -44,6 +48,12 @@ export class JoinGame {
       }
 
       private async handlePlayerJoined(joinGameResponse: JoinGameResponse) {
+
+        if (joinGameResponse.gameId !== this.gameId)
+        {
+          return;
+        }
+
         // Handle case where another player is already waiting
         this.waitingForOpponent = false;
 

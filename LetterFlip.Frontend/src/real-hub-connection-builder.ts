@@ -21,7 +21,7 @@ export class RealHubConnectionBuilder implements IHubConnectionBuilder {
     private hubConnection: HubConnection;
     private dataTypeMap: Map<DataType, string[]> = new Map([
         [DataType.GameResponse, ['gameId', 'playerName', 'opponentWord']],
-        [DataType.JoinGameResponse, ['playerName', 'opponentWord']],
+        [DataType.JoinGameResponse, ['gameId', 'playerName', 'opponentWord']],
         [DataType.CheckTileResponse, ['gameId', 'letter', 'occurrences']],
         [DataType.GuessLetterResponse, ['gameId', 'letter', 'position', 'isCorrect']],
         [DataType.GuessWordResponse, ['gameId', 'word', 'isCorrect', 'isGameOver']],

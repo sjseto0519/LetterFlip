@@ -10,6 +10,7 @@ export interface GameResponse {
 }
 
 export interface JoinGameResponse {
+  gameId: string;
   playerName: string;
   opponentWord: string;
 }

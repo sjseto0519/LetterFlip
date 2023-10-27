@@ -5,5 +5,7 @@
         public string PlayerName { get; set; }
 
         public string OpponentWord { get; set; }
+
+        public string YourWord { get; set; }
     }
 }

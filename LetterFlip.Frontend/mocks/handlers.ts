@@ -181,6 +181,7 @@ export const handlers = [
         else if (postId === MessageType.PlayerJoined)
         {
           const joinGameResponse: JoinGameResponse = {
+            gameId,
             playerName: 'MyPlayerTwo',
             opponentWord
           };

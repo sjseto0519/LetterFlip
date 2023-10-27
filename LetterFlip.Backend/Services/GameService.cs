@@ -1,7 +1,6 @@
 ﻿using JWTAuthentication.NET6._0.Auth;
 using LetterFlip.Backend.Models;
 using Microsoft.EntityFrameworkCore;
-using System.Diagnostics.Metrics;
 
 namespace LetterFlip.Backend.Services
 {
@@ -14,84 +13,6 @@ namespace LetterFlip.Backend.Services
         public GameService(ApplicationDbContext context)
         {
             _context = context;
-        }
-
-        public async Task<GameResponseBase> JoinOrCreateGameAsync(string playerName, string gameId)
-        {
-            //var game = await _context.Games.FindAsync(gameId);
-
-            //if (game == null)
-            //{
-            //    game = new Game
-            //    {
-            //        Id = gameId,
-            //        Player1Name = playerName,
-            //        InProgress = true
-            //    };
-            //    _context.Games.Add(game);
-            //}
-            //else
-            //{
-            //    game.Player2Name = playerName;
-            //}
-
-            //await _context.SaveChangesAsync();
-            return new JoinGameResponse() { 
-                PlayerName = "",
-                OpponentWord = "EXAMPLE"
-            };
-        }
-
-        public async Task<OpponentCheckedTileResponse> CreateOpponentCheckedTileResponseAsync()
-        {
-            return new OpponentCheckedTileResponse()
-            {
-                GameId = "",
-                Letter = "A",
-                IsCorrect = true
-            };
-        }
-
-        public async Task<OpponentGuessedLetterCorrectlyResponse> CreateOpponentGuessedLetterCorrectlyResponseAsync()
-        {
-            return new OpponentGuessedLetterCorrectlyResponse()
-            {
-                GameId = "",
-                Letter = "A",
-                Position = 0,
-                NewWordView = new[] { "" },
-                IsGameOver = false
-            };
-        }
-
-        public async Task<OpponentGuessedWordCorrectlyResponse> CreateOpponentGuessedWordCorrectlyResponseAsync()
-        {
-            return new OpponentGuessedWordCorrectlyResponse()
-            {
-                GameId = "",
-                Word = "EXAMPLE",
-                NewWord = "EXAMPLE",
-                IsGameOver = false
-            };
-        }
-
-        public async Task<OpponentGuessedLetterIncorrectlyResponse> CreateOpponentGuessedLetterIncorrectlyResponseAsync()
-        {
-            return new OpponentGuessedLetterIncorrectlyResponse()
-            {
-                GameId = "",
-                Letter = "A",
-                Position = 0
-            };
-        }
-
-        public async Task<OpponentGuessedWordIncorrectlyResponse> CreateOpponentGuessedWordIncorrectlyResponseAsync()
-        {
-            return new OpponentGuessedWordIncorrectlyResponse()
-            {
-                GameId = "",
-                Word = "EXAMPLE"
-            };
         }
 
         public async Task<CheckTileResponse?> CheckTileAsync(string letter, int playerIndex, string gameId)
@@ -168,9 +89,75 @@ namespace LetterFlip.Backend.Services
             return null;
         }
 
-        Task<Game> IGameService.JoinOrCreateGameAsync(string playerName, string gameId)
+        public async Task<GameResponseBase?> JoinOrCreateGameAsync(string playerName, string gameId)
         {
-            throw new NotImplementedException();
+            var finishedGames = await _context.Games.Where(g => g.GameId == gameId && g.InProgress == false).ToListAsync();
+            _context.Games.RemoveRange(finishedGames);
+
+            await _context.SaveChangesAsync();
+
+            var game = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
+                && g.PlayerIndex == 0);
+            if (game == null)
+            {
+                Game game1 = new Game
+                {
+                     CurrentDifficulty = 4,
+                     CurrentTurn = 0,
+                     GameId = gameId,
+                     WordView = "____",
+                     InProgress = true,
+                     Player1Name = playerName,
+                     Player2Name = "",
+                     PlayerIndex = 0,
+                     GameState = "",
+                     OpponentWord = AdaptiveWordProvider.GetRandomWord(Enumerations.DifficultyType.Easy),
+                };
+
+                Game game2 = new Game
+                {
+                    CurrentDifficulty = 4,
+                    CurrentTurn = 0,
+                    GameId = gameId,
+                    WordView = "____",
+                    InProgress = true,
+                    Player1Name = playerName,
+                    Player2Name = "",
+                    PlayerIndex = 1,
+                    GameState = "",
+                    OpponentWord = AdaptiveWordProvider.GetRandomWord(Enumerations.DifficultyType.Easy),
+                };
+
+                await _context.SaveChangesAsync();
+
+                return new GameResponse
+                {
+                    GameId = gameId,
+                    PlayerName = playerName,
+                    OpponentWord = game1.OpponentWord,
+                };
+            }
+
+
+            var foundGame = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
+                && g.Player2Name == ""
+                && g.PlayerIndex == 1);
+
+            if (foundGame != null)
+            {
+
+                foundGame.Player2Name = playerName;
+                await _context.SaveChangesAsync();
+
+                return new JoinGameResponse
+                {
+                    PlayerName = foundGame.Player1Name,
+                    OpponentWord = foundGame.OpponentWord,
+                    YourWord = game.OpponentWord,
+                };
+            }
+
+            return null;
         }
 
         public async Task<LoadGameResponse?> LoadGameAsync(string playerName, string otherPlayerName, int playerIndex)

@@ -41,5 +41,7 @@
         public const string GuessWordFailedResponse = "GuessWordFailedResponse";
 
         public const string GuessLetterFailedResponse = "GuessLetterFailedResponse";
+
+        public const string CreateGameFailedResponse = "CreateGameFailedResponse";
     }
 }
