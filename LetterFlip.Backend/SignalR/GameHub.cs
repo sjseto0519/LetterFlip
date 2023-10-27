@@ -19,10 +19,10 @@ namespace LetterFlip.Backend.SignalR
         public async Task CheckTile(string letter, int playerIndex, string gameId)
         {
             CheckTileResponse tileResponse = await gameService.CheckTileAsync(letter, playerIndex, gameId);
-            int occurrences = currentWord.Count(c => c.ToString() == letter);
+            //int occurrences = currentWord.Count(c => c.ToString() == letter);
 
-            var result = new { Letter = letter, Occurrences = occurrences };
-            await Clients.Caller.SendAsync(ResponseType.CheckTileResponse, JsonConvert.SerializeObject(result));
+            //var result = new { Letter = letter, Occurrences = occurrences };
+            //await Clients.Caller.SendAsync(ResponseType.CheckTileResponse, JsonConvert.SerializeObject(result));
         }
 
         public async Task JoinOrCreateGame(string playerName, string gameId)
@@ -46,8 +46,8 @@ namespace LetterFlip.Backend.SignalR
         {
             LoadGameResponse game = await gameService.LoadGameAsync(playerName, otherPlayerName, playerIndex);
 
-            await Groups.AddToGroupAsync(Context.ConnectionId, game.Id);
-            await Clients.Group(game.Id).SendAsync("GameStarted", game);
+            //await Groups.AddToGroupAsync(Context.ConnectionId, game.Id);
+            //await Clients.Group(game.Id).SendAsync("GameStarted", game);
         }
 
         public async Task SaveGame(string gameId, string playerName, string otherPlayerName, int playerIndex, string savedGame)
@@ -87,8 +87,8 @@ namespace LetterFlip.Backend.SignalR
         {
             NewGameStartedResponse game = await gameService.NewGameAsync(gameId);
 
-            await Groups.AddToGroupAsync(Context.ConnectionId, game.Id);
-            await Clients.Group(game.Id).SendAsync("GameStarted", game);
+            //await Groups.AddToGroupAsync(Context.ConnectionId, game.Id);
+            //await Clients.Group(game.Id).SendAsync("GameStarted", game);
         }
 
         public async Task SendMessage(string message, string gameId)

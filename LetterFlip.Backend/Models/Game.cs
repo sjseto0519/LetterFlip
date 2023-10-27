@@ -7,8 +7,10 @@ namespace LetterFlip.Backend.Models
     {
         [Key]
         public int Id { get; set; }
+        public string GameId { get; set; }
         public string Player1Name { get; set; }
         public string Player2Name { get; set; }
+        public int PlayerIndex { get; set; }
         public bool InProgress { get; set; }
         public int CurrentTurn { get; set; }
         public int CurrentDifficulty { get; set; }
