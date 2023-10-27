@@ -1,16 +1,23 @@
+import { Game } from "game";
 import { GameState } from "game-state";
 
 export class GameService {
 
     public gameState: GameState;
+    public currentGame: Game;
 
   constructor() {
     // Initialize or fetch initial game state
     this.gameState = new GameState();
   }
 
+  initialize(game: Game) {
+    this.currentGame = game;
+  }
+
   nextTurn() {
     this.gameState.currentTurn = this.gameState.currentTurn === 'player1' ? 'player2' : 'player1';
+    this.currentGame.saveGame();
   }
 
   flipLetter(letter: string) {

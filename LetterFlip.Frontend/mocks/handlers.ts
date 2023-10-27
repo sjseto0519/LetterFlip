@@ -1,7 +1,7 @@
 import { MessageType } from 'dual-hub-connection'
 import { InvokeMessagesResponse } from 'mock-hub-connection-builder'
 import { http, HttpResponse } from 'msw'
-import { CheckTileResponse, GameResponse, GuessLetterResponse, GuessWordResponse, JoinGameResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SendMessageResponse } from 'signalr-service'
+import { CheckTileResponse, GameResponse, GuessLetterResponse, GuessWordResponse, JoinGameResponse, LoadGameResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SendMessageResponse } from 'signalr-service'
 
 export interface HandlerRequestBody {
   params: any[];
@@ -208,6 +208,31 @@ export const handlers = [
             gameId
           };
           return HttpResponse.json(sendMessageResponse);
+        }
+        else if (postId === MessageType.SaveGame) {
+          const saveGameResponse: InvokeMessagesResponse = {
+            messages: []
+          };
+          return HttpResponse.json(saveGameResponse);
+        }
+        else if (postId === MessageType.LoadGame) {
+          const loadGameResponse: InvokeMessagesResponse = {
+            messages: [
+              {
+                messageName: MessageType.LoadGameResponse,
+                delay: 100
+              }
+            ]
+          };
+          return HttpResponse.json(loadGameResponse);
+        }
+        else if (postId === MessageType.LoadGameResponse) {
+          const loadGameResponse: LoadGameResponse = {
+            playerIndex: 0,
+            gameId,
+            savedGame: localStorage.getItem('savedGame')
+          };
+          return HttpResponse.json(loadGameResponse);
         }
         else
         {

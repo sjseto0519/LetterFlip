@@ -20,7 +20,10 @@ export enum MessageType {
     OpponentCheckedTile = "OpponentCheckedTile",
     NewGameStarted = "NewGameStarted",
     SendMessage = "SendMessage",
-    SendMessageResponse = "SendMessageResponse"
+    SendMessageResponse = "SendMessageResponse",
+    SaveGame = "SaveGame",
+    LoadGame = "LoadGame",
+    LoadGameResponse = "LoadGameResponse"
   }
 
 export class DualHubConnection {
