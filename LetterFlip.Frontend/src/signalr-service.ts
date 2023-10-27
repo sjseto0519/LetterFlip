@@ -46,7 +46,6 @@ export interface OpponentGuessedLetterCorrectlyResponse {
   letter: string;
   position: number;
   newWordView: string[];
-  isGameOver: boolean;
 }
 
 export interface OpponentGuessedWordIncorrectlyResponse {
@@ -125,8 +124,8 @@ export class SignalRService {
       await this.connection.invoke(MessageType.GuessWord, word, playerIndex, gameId);
     }
 
-    public async requestNewGame(gameId: string) {
-      await this.connection.invoke(MessageType.NewGame, gameId);
+    public async requestNewGame(gameData: GameData) {
+      await this.connection.invoke(MessageType.NewGame, gameData.gameId, gameData.playerName, gameData.otherPlayerName, gameData.playerIndex);
     }
 
     public async sendMessage(message: string, gameId: string) {

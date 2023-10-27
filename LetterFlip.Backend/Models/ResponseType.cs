@@ -16,6 +16,10 @@
 
         public const string OpponentGuessedWordIncorrect = "OpponentGuessedWordIncorrect";
 
+        public const string GuessWordResponse = "GuessWordResponse";
+
+        public const string GuessLetterResponse = "GuessLetterResponse";
+
         public const string PlayerJoined = "PlayerJoined";
 
         public const string JoinedGame = "JoinedGame";
@@ -25,5 +29,17 @@
         public const string CheckTileResponse = "CheckTileResponse";
 
         public const string NewGameStarted = "NewGameStarted";
+
+        public const string GameNotFoundResponse = "GameNotFoundResponse";
+
+        public const string GameNotSavedResponse = "GameNotSavedResponse";
+
+        public const string NewGameFailedResponse = "NewGameFailedResponse";
+
+        public const string CheckTileFailedResponse = "CheckTileFailedResponse";
+
+        public const string GuessWordFailedResponse = "GuessWordFailedResponse";
+
+        public const string GuessLetterFailedResponse = "GuessLetterFailedResponse";
     }
 }

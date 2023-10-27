@@ -210,8 +210,7 @@ export const handlers = [
             gameId,
             letter: 'E',
             position: 0,
-            newWordView: ['E', '_', '_', '_'],
-            isGameOver: false
+            newWordView: ['E', '_', '_', '_']
           };
           return HttpResponse.json(opponentGuessedLetterCorrectlyResponse);
         }

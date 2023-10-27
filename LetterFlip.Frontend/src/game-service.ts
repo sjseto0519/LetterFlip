@@ -37,7 +37,7 @@ export class GameService {
     }
     else
     {
-        this.gameState.currentTurn = 'player2';
+        this.gameState.currentTurn = 'player1';
         this.gameState.yourPlayerIndex = 1;
         this.gameState.player1Name = otherPlayerName;
         this.gameState.player2Name = playerName;

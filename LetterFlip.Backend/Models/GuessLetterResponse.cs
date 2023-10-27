@@ -9,5 +9,7 @@
         public int Position { get; set; }
 
         public bool IsCorrect { get; set; }
+
+        public string NewWordView { get; set; }
     }
 }

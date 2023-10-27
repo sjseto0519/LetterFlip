@@ -26,7 +26,7 @@ export class RealHubConnectionBuilder implements IHubConnectionBuilder {
         [DataType.GuessLetterResponse, ['gameId', 'letter', 'position', 'isCorrect']],
         [DataType.GuessWordResponse, ['gameId', 'word', 'isCorrect', 'isGameOver']],
         [DataType.OpponentGuessedWordCorrectlyResponse, ['gameId', 'word', 'newWord', 'isGameOver']],
-        [DataType.OpponentGuessedLetterCorrectlyResponse, ['gameId', 'letter', 'position', 'newWordView', 'isGameOver']],
+        [DataType.OpponentGuessedLetterCorrectlyResponse, ['gameId', 'letter', 'position', 'newWordView']],
         [DataType.OpponentGuessedWordIncorrectlyResponse, ['gameId', 'word']],
         [DataType.OpponentGuessedLetterIncorrectlyResponse, ['gameId', 'letter', 'position']],
         [DataType.OpponentCheckedTileResponse, ['gameId', 'letter', 'isCorrect']],

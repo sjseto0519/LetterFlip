@@ -49,7 +49,7 @@ namespace LetterFlip.Backend.Services
                         throw new ArgumentException("Invalid difficulty type.");
                 }
 
-                wordSubset = sortedWords.Skip(skip).Take(take).ToList();
+                wordSubset = sortedWords.Skip(skip).Take(take).Where(x => x.Length == (int)difficulty).ToList();
                 cachedWordSubsets[difficulty] = wordSubset;
 
                 if (wordSubset.Count == 0)
@@ -60,7 +60,7 @@ namespace LetterFlip.Backend.Services
 
             lock (rand)
             {
-                return wordSubset[rand.Next(wordSubset.Count)];
+                return wordSubset[rand.Next(wordSubset.Count)].ToUpper();
             }
         }
     }

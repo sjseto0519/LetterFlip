@@ -11,6 +11,8 @@ namespace LetterFlip.Backend.Models
         public string Player1Name { get; set; }
         public string Player2Name { get; set; }
         public int PlayerIndex { get; set; }
+        public string OpponentWord { get; set; }
+        public string WordView { get; set; }
         public bool InProgress { get; set; }
         public int CurrentTurn { get; set; }
         public int CurrentDifficulty { get; set; }

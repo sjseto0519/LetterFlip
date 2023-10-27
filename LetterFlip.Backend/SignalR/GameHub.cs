@@ -2,6 +2,7 @@
 using LetterFlip.Backend.Services;
 using Microsoft.AspNetCore.SignalR;
 using Newtonsoft.Json;
+using System.Diagnostics.Metrics;
 
 namespace LetterFlip.Backend.SignalR
 {
@@ -13,16 +14,22 @@ namespace LetterFlip.Backend.SignalR
         public GameHub(IAdaptiveWordProvider adaptiveWordProvider, IGameService gameService)
         {
             this.adaptiveWordProvider = adaptiveWordProvider;
+            gameService.AdaptiveWordProvider = adaptiveWordProvider;
             this.gameService = gameService;
         }
 
         public async Task CheckTile(string letter, int playerIndex, string gameId)
         {
-            CheckTileResponse tileResponse = await gameService.CheckTileAsync(letter, playerIndex, gameId);
-            //int occurrences = currentWord.Count(c => c.ToString() == letter);
+            CheckTileResponse? tileResponse = await gameService.CheckTileAsync(letter, playerIndex, gameId);
 
-            //var result = new { Letter = letter, Occurrences = occurrences };
-            //await Clients.Caller.SendAsync(ResponseType.CheckTileResponse, JsonConvert.SerializeObject(result));
+            if (tileResponse == null)
+            {
+                await Clients.Caller.SendAsync(ResponseType.CheckTileFailedResponse);
+            }
+
+            await Clients.Caller.SendAsync(ResponseType.CheckTileResponse, tileResponse);
+
+            await Clients.AllExcept(Context.ConnectionId).SendAsync(ResponseType.OpponentCheckedTile, gameId, letter, tileResponse.Occurrences > 0);
         }
 
         public async Task JoinOrCreateGame(string playerName, string gameId)
@@ -44,56 +51,86 @@ namespace LetterFlip.Backend.SignalR
 
         public async Task LoadGame(string playerName, string otherPlayerName, int playerIndex)
         {
-            LoadGameResponse game = await gameService.LoadGameAsync(playerName, otherPlayerName, playerIndex);
+            LoadGameResponse? game = await gameService.LoadGameAsync(playerName, otherPlayerName, playerIndex);
 
-            //await Groups.AddToGroupAsync(Context.ConnectionId, game.Id);
-            //await Clients.Group(game.Id).SendAsync("GameStarted", game);
+            if (game != null)
+            {
+                await Clients.Caller.SendAsync(ResponseType.LoadGameResponse, game.GameId, game.PlayerIndex, game.SavedGame);
+            }
+            else
+            {
+                await Clients.Caller.SendAsync(ResponseType.GameNotFoundResponse);
+            }
         }
 
         public async Task SaveGame(string gameId, string playerName, string otherPlayerName, int playerIndex, string savedGame)
         {
-            await gameService.SaveGameAsync(gameId, playerName, otherPlayerName, playerIndex, savedGame);
+            var result = await gameService.SaveGameAsync(gameId, playerName, otherPlayerName, playerIndex, savedGame);
+            if (!result)
+            {
+                await Clients.Caller.SendAsync(ResponseType.GameNotSavedResponse);
+            }
         }
 
         public async Task GuessLetter(string letter, int wordIndex, int playerIndex, string gameId)
         {
-            GuessLetterResponse guessResponse = await gameService.GuessLetterAsync(letter, wordIndex, playerIndex, gameId);
+            GuessLetterResponse? guessLetterResponse = await gameService.GuessLetterAsync(letter, wordIndex, playerIndex, gameId);
 
-            if (guessResponse.IsCorrect)
+            if (guessLetterResponse == null)
             {
-                await Clients.Group(gameId).SendAsync("OpponentGuessedLetterCorrectly", guessResponse);
+                await Clients.Caller.SendAsync(ResponseType.GuessLetterFailedResponse);
+            }
+
+            await Clients.Caller.SendAsync(ResponseType.GuessLetterResponse, guessLetterResponse.GameId, guessLetterResponse.Letter, guessLetterResponse.Position, guessLetterResponse.IsCorrect);
+
+            if (guessLetterResponse.IsCorrect)
+            {
+                await Clients.AllExcept(Context.ConnectionId).SendAsync(ResponseType.OpponentGuessedLetterCorrect, gameId, letter, wordIndex, guessLetterResponse.NewWordView.ToCharArray().Select(c => c.ToString()).ToArray());
             }
             else
             {
-                await Clients.Group(gameId).SendAsync("OpponentGuessedLetterIncorrectly", guessResponse);
+                await Clients.AllExcept(Context.ConnectionId).SendAsync(ResponseType.OpponentGuessedLetterIncorrect, gameId, letter, wordIndex);
             }
         }
 
         public async Task GuessWord(string word, int playerIndex, string gameId)
         {
-            GuessWordResponse guessResponse = await gameService.GuessWordAsync(word, playerIndex, gameId);
+            GuessWordResponse? guessWordResponse = await gameService.GuessWordAsync(word, playerIndex, gameId);
 
-            if (guessResponse.IsCorrect)
+            if (guessWordResponse == null)
             {
-                await Clients.Group(gameId).SendAsync("OpponentGuessedWordCorrectly", guessResponse);
+                await Clients.Caller.SendAsync(ResponseType.GuessWordFailedResponse);
+            }
+
+            await Clients.Caller.SendAsync(ResponseType.GuessWordResponse, guessWordResponse.GameId, guessWordResponse.Word, guessWordResponse.IsCorrect, guessWordResponse.IsGameOver);
+
+            if (guessWordResponse.IsCorrect)
+            {
+                await Clients.AllExcept(Context.ConnectionId).SendAsync(ResponseType.OpponentGuessedWordCorrect, gameId, word, guessWordResponse.NewWord, guessWordResponse.IsGameOver);
             }
             else
             {
-                await Clients.Group(gameId).SendAsync("OpponentGuessedWordIncorrectly", guessResponse);
+                await Clients.AllExcept(Context.ConnectionId).SendAsync(ResponseType.OpponentGuessedWordIncorrect, gameId, word);
             }
         }
 
-        public async Task NewGame(string gameId)
+        public async Task NewGame(string gameId, string playerName, string otherPlayerName, int playerIndex)
         {
-            NewGameStartedResponse game = await gameService.NewGameAsync(gameId);
+            (NewGameStartedResponse YourGame, NewGameStartedResponse OpponentGame)? game = await gameService.NewGameAsync(gameId, playerName, otherPlayerName, playerIndex);
 
-            //await Groups.AddToGroupAsync(Context.ConnectionId, game.Id);
-            //await Clients.Group(game.Id).SendAsync("GameStarted", game);
+            if (game == null)
+            {
+                await Clients.Caller.SendAsync(ResponseType.NewGameFailedResponse);
+            }
+
+            await Clients.Caller.SendAsync(ResponseType.NewGameStarted, game.Value.YourGame.GameId, game.Value.YourGame.OpponentWord);
+
+            await Clients.AllExcept(Context.ConnectionId).SendAsync(ResponseType.NewGameStarted, game.Value.OpponentGame.GameId, game.Value.OpponentGame.OpponentWord);
         }
 
         public async Task SendMessage(string message, string gameId)
         {
-            await Clients.Group(gameId).SendAsync("ReceiveMessage", message);
+            await Clients.AllExcept(Context.ConnectionId).SendAsync(ResponseType.SendMessageResponse, gameId, message);
         }
 
         public override Task OnConnectedAsync()

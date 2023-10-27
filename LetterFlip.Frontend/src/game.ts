@@ -141,7 +141,7 @@ export class Game {
 
   playNewGame() {
     this.isNewGameRequested = true;
-    this.signalRService.requestNewGame(this.gameService.gameState.gameId);
+    this.signalRService.requestNewGame(this.toGameData());
   }
 
   exitGame() {
@@ -344,6 +344,7 @@ detached() {
     else
     {
       if (guessWordResponse.isGameOver) {
+        this.historyItems.push({ item: `Correct! The word was ${guessWordResponse.word}`, yours: true});
         this.winner = this.gameService.gameState.yourPlayerIndex === 0 ? 'player1' : 'player2';
         this.toggleGameOverModal();
         const data: GameOverEventData = { winner: this.winner };
@@ -389,13 +390,7 @@ detached() {
 
     this.historyItems.push({ item: 'Opponent correctly guessed the letter ' + opponentGuessedLetterCorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterCorrectlyResponse.position + 1), yours: false});
 
-    if (opponentGuessedLetterCorrectlyResponse.isGameOver) {
-      this.winner = this.gameService.gameState.yourPlayerIndex === 0 ? 'player2' : 'player1';
-      this.toggleGameOverModal();
-      const data: GameOverEventData = { winner: this.winner };
-      this.eventAggregator.publish(Events.GameOver, data);
-    }
-    else if (opponentGuessedLetterCorrectlyResponse.letter) {
+    if (opponentGuessedLetterCorrectlyResponse.letter) {
       const opponentGameState = this.gameService.gameState.getOpponentPlayerState();
       opponentGameState.wordView = opponentGuessedLetterCorrectlyResponse.newWordView;
     }
