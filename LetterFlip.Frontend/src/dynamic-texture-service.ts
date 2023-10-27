@@ -15,8 +15,6 @@ export class DynamicTextureService {
     private textureMap: Map<string, StandardMaterial> = new Map();
     private scene: Scene;
 
-    constructor() {}
-
     public initialize(scene: Scene) {
         this.scene = scene;
     }

@@ -2,7 +2,7 @@ import { PlayerState } from "player-state";
 
 export class GameState {
     public gameId: string;
-    public currentTurn: string = 'player1';
+    public currentTurn = 'player1';
     public yourPlayerIndex: number;
     public player1Name: string;
     public player2Name: string;
