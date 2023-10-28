@@ -1,6 +1,6 @@
 import { autoinject } from 'aurelia-framework';
 import { BabylonService } from "babylon-service";
-import { CheckTileResponse, GuessLetterResponse, GuessWordResponse, LoadGameResponse, NewGameStartedResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SendMessageResponse, SignalRService } from 'signalr-service';
+import { CheckTileResponse, ErrorResponse, GuessLetterResponse, GuessWordResponse, LoadGameResponse, NewGameStartedResponse, OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SendMessageResponse, SignalRService } from 'signalr-service';
 import { Router } from 'aurelia-router';
 import { GameService } from 'game-service';
 import { Events } from 'utils/events';
@@ -51,6 +51,7 @@ export class Game {
   guessedPositions = [];
   isNewGameRequested = false;
   showLastActionToast = true;
+  showLastMessageToast = true;
 
   get winnerName() {
     if (this.winner) {
@@ -70,8 +71,16 @@ export class Game {
     return [...this.historyItems].reverse().find(el => el.type !== 'Message');
   }
 
+  get lastElementWithTypeMessage() {
+    return [...this.historyItems].reverse().find(el => el.type === 'Message' && !el.yours);
+  }
+
   get hasTypelessElement() {
     return this.historyItems.findIndex(el => !el.type) > -1;
+  }
+
+  get hasTypedElement() {
+    return this.historyItems.findIndex(el => !!el.type && !el.yours) > -1;
   }
 
   toGameData(): GameData {
@@ -79,7 +88,7 @@ export class Game {
       gameId: this.gameId,
       playerName: this.playerName,
       otherPlayerName: this.otherPlayerName,
-      playerIndex: this.playerIndex
+      playerIndex: this.gameService.gameState.yourPlayerIndex
     };
   }
 
@@ -168,6 +177,7 @@ export class Game {
     this.signalRService.onCheckTileResponse(this.handleCheckTileResponse.bind(this));
     this.signalRService.onSendMessageResponse(this.handleSendMessageResponse.bind(this));
     this.signalRService.onLoadGameResponse(this.handleLoadGameResponse.bind(this));
+    this.signalRService.onErrorResponse(this.HandleErrorResponse.bind(this));
     const playerState = this.gameService.gameState.getYourPlayerState();
     if (!playerState) {
       this.signalRService.loadGame(this.toGameData());
@@ -217,6 +227,10 @@ detached() {
   sendMessage() {
     this.historyItems.push({ item: this.message, yours: true, type: 'Message' });
     this.signalRService.sendMessage(this.message, this.gameService.gameState.gameId);
+  }
+
+  private async HandleErrorResponse(errorResponse: ErrorResponse) {
+    console.error(errorResponse.detail);
   }
 
   private async handleLoadGameResponse(loadGameResponse: LoadGameResponse) {
@@ -281,6 +295,7 @@ detached() {
 
     this.historyItems = [];
     this.gameService.newGame(this.gameService.gameState.gameId, this.gameService.gameState.yourPlayerIndex === 0 ? 1 : 0, this.playerName, this.otherPlayerName, newGameStarted.opponentWord);
+    this.guessedPositions = Array.from({ length: this.gameService.gameState.getYourPlayerState().currentDifficulty }, () => '');
     const data: NewGameStartedEventData = {};
     this.eventAggregator.publish(Events.NewGameStarted, data);
     this.isNewGameRequested = false;
@@ -346,7 +361,7 @@ detached() {
     {
       if (guessWordResponse.isGameOver) {
         this.historyItems.push({ item: `Correct! The word was ${guessWordResponse.word}`, yours: true});
-        this.winner = this.gameService.gameState.yourPlayerIndex === 0 ? 'player1' : 'player2';
+        this.winner = 'player1';
         this.toggleGameOverModal();
         const data: GameOverEventData = { winner: this.winner };
         this.eventAggregator.publish(Events.GameOver, data);
@@ -355,6 +370,7 @@ detached() {
         const playerState = this.gameService.gameState.getYourPlayerState();
         playerState.currentDifficulty++;
         playerState.wordView = new Array(playerState.currentDifficulty).fill('_');
+        this.guessedPositions = Array.from({ length: this.gameService.gameState.getYourPlayerState().currentDifficulty }, () => '');
         this.historyItems.push({ item: `Correct! The word was ${guessWordResponse.word}`, yours: true});
         const data: GuessWordCorrectEventData = { word: guessWordResponse.word };
         this.eventAggregator.publish(Events.GuessWordCorrect, data);

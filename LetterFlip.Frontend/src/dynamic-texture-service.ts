@@ -8,6 +8,7 @@ export interface TextureConfig {
     height: number;
     flip: boolean;
     emissiveColor?: Color3;
+    noCache?: boolean;
 }
 
 @autoinject
@@ -27,8 +28,10 @@ export class DynamicTextureService {
         const hash = this.generateConfigHash(config);
 
         // Check if a texture with the same config exists
-        if (this.textureMap.has(hash)) {
-            return this.textureMap.get(hash);
+        if (!config.noCache) {
+            if (this.textureMap.has(hash)) {
+                return this.textureMap.get(hash);
+            }
         }
 
         // Create new DynamicTexture

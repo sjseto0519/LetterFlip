@@ -82,12 +82,16 @@ export interface LoadGameResponse {
   savedGame: string;
 }
 
+export interface ErrorResponse {
+  detail: string;
+}
+
 export class SignalRService {
     private connection: DualHubConnection;
   
     constructor() {
       const mockConnectionBuilder = new MockHubConnectionBuilder();
-      const connectionBuilder = new RealHubConnectionBuilder("https://localhost:7213/gamehub");
+      const connectionBuilder = new RealHubConnectionBuilder("/gamehub");
       this.connection = new DualHubConnection(connectionBuilder);
     }
   
@@ -188,6 +192,10 @@ export class SignalRService {
 
     public onLoadGameResponse(callback: (loadGameResponse: LoadGameResponse) => void) {
       this.connection.on(MessageType.LoadGameResponse, callback, DataType.LoadGameResponse);
+    }
+
+    public onErrorResponse(callback: (detail: ErrorResponse) => void) {
+      this.connection.on(MessageType.ErrorResponse, callback, DataType.ErrorResponse);
     }
   }
   

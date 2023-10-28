@@ -2,7 +2,7 @@ import { GUI3DManager, HolographicButton, TextBlock } from '@babylonjs/gui';
 import HavokPhysics from '@babylonjs/havok';
 import { Engine, Scene, ArcRotateCamera, Vector3, HemisphericLight, MeshBuilder, HavokPlugin, PhysicsAggregate, 
     PhysicsShapeType, Mesh, StandardMaterial, PBRMaterial, Texture, Color3, PhysicsBody, DirectionalLight, Angle, 
-    DynamicTexture, Matrix, ActionManager, ExecuteCodeAction } from '@babylonjs/core';
+    DynamicTexture, Matrix, ActionManager, ExecuteCodeAction, PointLight, SpotLight, Quaternion } from '@babylonjs/core';
 import { Tile } from 'tile';
 import { SignalRService } from 'signalr-service';
 import { autoinject } from 'aurelia-framework';
@@ -105,9 +105,13 @@ export class BabylonService {
     // Let's add a button
     this.display = new HolographicButton("down");
     manager.addControl(this.display);
-    this.display.position.y = -2;
-    this.display.position.x = -4.5;
+    this.display.position.y = 1.75;
+    this.display.position.x = 0;
+    let angle = Math.PI / 8;  // 45 degrees in radians
+    let axis = new Vector3(1, 0, 0); // Y-axis
+
     this.display.scaling = new Vector3(2, 2, 2);
+    this.display.mesh.rotationQuaternion = Quaternion.RotationAxis(axis, angle);
 
     const overlayMaterial = new StandardMaterial("overlay", this.scene);
     overlayMaterial.backFaceCulling = false;
@@ -139,12 +143,14 @@ export class BabylonService {
 
   private async setupCamera(canvas: HTMLCanvasElement) {
     this.camera = new ArcRotateCamera('camera1', -Math.PI / 2, Math.PI / 2, 10, Vector3.Zero(), this.scene);
+    this.camera.beta = Angle.FromDegrees(90).radians();
+    this.camera.alpha = Angle.FromDegrees(-92).radians();
     this.camera.attachControl(canvas, false);
     this.camera.setPosition(new Vector3(0, 1, -10));
     this.camera.upperBetaLimit = Angle.FromDegrees(90).radians();
-    this.camera.lowerBetaLimit = Angle.FromDegrees(70).radians();  
-    this.camera.upperAlphaLimit = Angle.FromDegrees(-80).radians();
-    this.camera.lowerAlphaLimit = Angle.FromDegrees(-100).radians();
+    this.camera.lowerBetaLimit = Angle.FromDegrees(80).radians();  
+    this.camera.upperAlphaLimit = Angle.FromDegrees(-88).radians();
+    this.camera.lowerAlphaLimit = Angle.FromDegrees(-92).radians();
   }
 
   private unflipAll() {
@@ -174,25 +180,49 @@ export class BabylonService {
     dir3.intensity = 0.1;
     dir3.diffuse = new Color3(1, 1, 1);
     dir3.specular = new Color3(1, 1, 1);
+
+    const dir = new DirectionalLight('dirLight', new Vector3(0, -0.05, -1), this.scene);
+    dir.intensity = 0.8;
+    dir.diffuse = new Color3(1, 1, 1);
+    dir.specular = new Color3(1, 1, 1);
+
+    const spotLight = new SpotLight(
+      "spotLight", 
+      new Vector3(0, 1, -1), // position
+      new Vector3(0, -1, 1), // direction
+      Math.PI / 2, // angle in radians (cone size)
+      0.1, // light decay exponent
+      this.scene
+  );
+  spotLight.intensity = 1;
   }
 
   private setupSkybox() {
-    const skybox = MeshBuilder.CreateBox("skyBox", { size: 1000 }, this.scene);
+    const skybox = MeshBuilder.CreateBox("skyBox", { size: 2000 }, this.scene);
     this.skybox = skybox;
     const skyboxMaterial = new StandardMaterial("skyBox", this.scene);
     skyboxMaterial.backFaceCulling = false;
      // Set the diffuse color to Cornflower Blue
     skyboxMaterial.diffuseColor = new Color3(0.3922, 0.5843, 0.9294);
     skyboxMaterial.specularColor = new Color3(0, 0, 0);
-    skybox.material = skyboxMaterial;
+    var material = this.dynamicTextureService.toWallMaterial({
+      name: "table_mountain_2_puresky2", 
+      alpha: 1.0, 
+      width: 4000, 
+      height: 2000, 
+      flip: false
+    }) as StandardMaterial;
+    material.backFaceCulling = false;
+    material.specularColor = new Color3(0, 0, 0);
+    skybox.material = material;
   }
 
   private setupWalls()
   {
     // Create walls
-    const leftWall = this.createWall(new Vector3(-3, -4.5, 0), 0.2, 100, 2, 0.8);
-    const rightWall = this.createWall(new Vector3(3, -4.5, 0), 0.2, 100, 2, 0.8);
-    const zWall1 = this.createWall(new Vector3(0, 45, 0.2), 6, 100, 0.1, 0.2);
+    //const leftWall = this.createWall(new Vector3(-3, -4.5, 0), 0.2, 100, 2, 0.8);
+    //const rightWall = this.createWall(new Vector3(3, -4.5, 0), 0.2, 100, 2, 0.8);
+    //const zWall1 = this.createWall(new Vector3(0, 45, 0.2), 6, 100, 0.1, 0.2);
   }
 
   private createWall(position: Vector3, width: number, height: number, depth: number, alpha: number): WallUnit {
@@ -212,36 +242,37 @@ export class BabylonService {
 
   private setupTiles(signalRService: SignalRService) {
     let adjust = 0.3;
-    this.setupTile(signalRService, "Q", new Vector3(-2.5 + adjust, 1, 0));
-    this.setupTile(signalRService, "W", new Vector3(-2 + adjust, 1, 0));
-    this.setupTile(signalRService, "E", new Vector3(-1.5 + adjust, 1, 0));
-    this.setupTile(signalRService, "R", new Vector3(-1 + adjust, 1, 0));
-    this.setupTile(signalRService, "T", new Vector3(-0.5 + adjust, 1, 0));
-    this.setupTile(signalRService, "Y", new Vector3(0 + adjust, 1, 0));
-    this.setupTile(signalRService, "U", new Vector3(0.5 + adjust, 1, 0));
-    this.setupTile(signalRService, "I", new Vector3(1.0 + adjust, 1, 0));
-    this.setupTile(signalRService, "O", new Vector3(1.5 + adjust, 1, 0));
-    this.setupTile(signalRService, "P", new Vector3(2 + adjust, 1, 0));
+    let y = 0;
+    this.setupTile(signalRService, "Q", new Vector3(-2.5 + adjust, y, 0));
+    this.setupTile(signalRService, "W", new Vector3(-2 + adjust, y, 0));
+    this.setupTile(signalRService, "E", new Vector3(-1.5 + adjust, y, 0));
+    this.setupTile(signalRService, "R", new Vector3(-1 + adjust, y, 0));
+    this.setupTile(signalRService, "T", new Vector3(-0.5 + adjust, y, 0));
+    this.setupTile(signalRService, "Y", new Vector3(0 + adjust, y, 0));
+    this.setupTile(signalRService, "U", new Vector3(0.5 + adjust, y, 0));
+    this.setupTile(signalRService, "I", new Vector3(1.0 + adjust, y, 0));
+    this.setupTile(signalRService, "O", new Vector3(1.5 + adjust, y, 0));
+    this.setupTile(signalRService, "P", new Vector3(2 + adjust, y, 0));
 
     adjust = 0.0;
-    this.setupTile(signalRService, "A", new Vector3(-2 + adjust, 0, 0));
-    this.setupTile(signalRService, "S", new Vector3(-1.5 + adjust, 0, 0));
-    this.setupTile(signalRService, "D", new Vector3(-1 + adjust, 0, 0));
-    this.setupTile(signalRService, "F", new Vector3(-0.5 + adjust, 0, 0));
-    this.setupTile(signalRService, "G", new Vector3(0 + adjust, 0, 0));
-    this.setupTile(signalRService, "H", new Vector3(0.5 + adjust, 0, 0));
-    this.setupTile(signalRService, "J", new Vector3(1.0 + adjust, 0, 0));
-    this.setupTile(signalRService, "K", new Vector3(1.5 + adjust, 0, 0));
-    this.setupTile(signalRService, "L", new Vector3(2.0 + adjust, 0, 0));
+    this.setupTile(signalRService, "A", new Vector3(-2 + adjust, y - 1, 0));
+    this.setupTile(signalRService, "S", new Vector3(-1.5 + adjust, y - 1, 0));
+    this.setupTile(signalRService, "D", new Vector3(-1 + adjust, y - 1, 0));
+    this.setupTile(signalRService, "F", new Vector3(-0.5 + adjust, y - 1, 0));
+    this.setupTile(signalRService, "G", new Vector3(0 + adjust, y - 1, 0));
+    this.setupTile(signalRService, "H", new Vector3(0.5 + adjust, y - 1, 0));
+    this.setupTile(signalRService, "J", new Vector3(1.0 + adjust, y - 1, 0));
+    this.setupTile(signalRService, "K", new Vector3(1.5 + adjust, y - 1, 0));
+    this.setupTile(signalRService, "L", new Vector3(2.0 + adjust, y - 1, 0));
 
     adjust = 0.0;
-    this.setupTile(signalRService, "Z", new Vector3(-1.5 + adjust, -1, 0));
-    this.setupTile(signalRService, "X", new Vector3(-1 + adjust, -1, 0));
-    this.setupTile(signalRService, "C", new Vector3(-0.5 + adjust, -1, 0));
-    this.setupTile(signalRService, "V", new Vector3(0 + adjust, -1, 0));
-    this.setupTile(signalRService, "B", new Vector3(0.5 + adjust, -1, 0));
-    this.setupTile(signalRService, "N", new Vector3(1.0 + adjust, -1, 0));
-    this.setupTile(signalRService, "M", new Vector3(1.5 + adjust, -1, 0));
+    this.setupTile(signalRService, "Z", new Vector3(-1.5 + adjust, y - 2, 0));
+    this.setupTile(signalRService, "X", new Vector3(-1 + adjust, y - 2, 0));
+    this.setupTile(signalRService, "C", new Vector3(-0.5 + adjust, y - 2, 0));
+    this.setupTile(signalRService, "V", new Vector3(0 + adjust, y - 2, 0));
+    this.setupTile(signalRService, "B", new Vector3(0.5 + adjust, y - 2, 0));
+    this.setupTile(signalRService, "N", new Vector3(1.0 + adjust, y - 2, 0));
+    this.setupTile(signalRService, "M", new Vector3(1.5 + adjust, y - 2, 0));
   }
 
   private createPBRMaterial(scene: Scene): PBRMaterial {
@@ -255,12 +286,12 @@ export class BabylonService {
   
   private createDynamicTextureWithText(scene: Scene, text: string): DynamicTexture {
     const texture = new DynamicTexture("dynamic texture", { width: 256, height: 256 }, scene);
-    const font = "bold 100px monospace";
-    texture.drawText(text, 100, 160, font, "black", "white", true, true);
+    const font = "bold 150px monospace";
+    texture.drawText(text, 85, 170, font, "white", null, true, true);
     return texture;
   }
   
-  private setupTileActions(box: Mesh, tile: Tile, signalRService: SignalRService, pbrMaterial: PBRMaterial) {
+  private setupTileActions(box: Mesh, tile: Tile, signalRService: SignalRService, pbrMaterial: StandardMaterial) {
     if (!box.actionManager) {
       box.actionManager = new ActionManager(this.scene);
     }
@@ -277,6 +308,12 @@ export class BabylonService {
           {
             return;
           }
+
+          if (tile.isFlipped)
+          {
+            return;
+          }
+
           signalRService.checkTile(tile.letter, this.gameService.gameState.yourPlayerIndex, this.gameService.gameState.gameId);
         }
       )
@@ -288,7 +325,8 @@ export class BabylonService {
         ActionManager.OnPointerOverTrigger,
         () => {
           // Change the emissive color or intensity to make it look "lit"
-          pbrMaterial.emissiveIntensity = 1.5;
+          pbrMaterial.useEmissiveAsIllumination = true;
+          pbrMaterial.alpha = 0.5
         }
       )
     );
@@ -299,8 +337,8 @@ export class BabylonService {
         ActionManager.OnPointerOutTrigger,
         () => {
           // Revert the emissive color or intensity
-          pbrMaterial.emissiveColor = new Color3(0.3922, 0.5843, 0.9294); // Your original color
-          pbrMaterial.emissiveIntensity = 0.9; // Your original intensity
+          pbrMaterial.useEmissiveAsIllumination = false;
+          pbrMaterial.alpha = 1.0
         }
       )
     );
@@ -308,18 +346,26 @@ export class BabylonService {
   
   private setupTile(signalRService: SignalRService, text: string, position: Vector3) {
     const pbrMaterial = this.createPBRMaterial(this.scene);
-    const box = MeshBuilder.CreateBox("box", { height: 0.5, width: 0.5, depth: 0.1 }, this.scene);
+    const box = MeshBuilder.CreateBox("box", { height: 0.5, width: 0.45, depth: 0.125 }, this.scene);
     const texture = this.createDynamicTextureWithText(this.scene, text);
   
-    pbrMaterial.emissiveTexture = texture;
+    let angle = Math.PI / 8;  // 45 degrees in radians
+    let axis = new Vector3(1, 0, 0); // Y-axis
+
+    box.rotationQuaternion = Quaternion.RotationAxis(axis, angle);
+
+    //pbrMaterial.emissiveTexture = texture;
     box.setPivotMatrix(Matrix.Translation(0, 0.3, 0));
-    box.material = pbrMaterial;
+    //box.material = pbrMaterial;
+    var mat = this.dynamicTextureService.toWallMaterial({name: "table_mountain_2_puresky2", alpha: 1.0, width: 1024, height: 512, flip: false, noCache: true});
+    mat.emissiveTexture = texture;
+    box.material = mat;
     box.position = position;
   
     const tile = new Tile(text, box);
     this.tiles.push(tile);
   
-    this.setupTileActions(box, tile, signalRService, pbrMaterial);
+    this.setupTileActions(box, tile, signalRService, mat);
   }  
 
   private addAsteriskToTile(tile: Tile) {
@@ -327,7 +373,7 @@ export class BabylonService {
     tile.incrementAsterisks();
   
     // Step 2: Create a new plane mesh for the asterisk
-    const asteriskPlane = MeshBuilder.CreateBox("asteriskPlane", { width: 0.5, height: 0.3, depth: 0.1 }, this.scene);
+    const asteriskPlane = MeshBuilder.CreateBox("asteriskPlane", { width: 0.45, height: 0.3, depth: 0.1 }, this.scene);
   
     // Step 3: Create a texture with the asterisk symbol
     const asteriskTexture = new DynamicTexture("asteriskTexture", { width: 128, height: 128 }, this.scene);
@@ -340,7 +386,7 @@ export class BabylonService {
     asteriskPlane.material = pbrMaterial;
   
     // Step 4: Position the asterisk at the top of the tile
-    asteriskPlane.position = new Vector3(tile.box.position.x, tile.box.position.y + 0.3, tile.box.position.z);
+    asteriskPlane.position = new Vector3(tile.box.position.x, tile.box.position.y + 0.3, tile.box.position.z + 0.25);
   
     if (tile.asterisks) {
       this.scene.removeMesh(tile.asterisks);

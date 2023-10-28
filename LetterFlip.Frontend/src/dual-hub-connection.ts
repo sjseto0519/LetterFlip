@@ -23,7 +23,8 @@ export enum MessageType {
     SendMessageResponse = "SendMessageResponse",
     SaveGame = "SaveGame",
     LoadGame = "LoadGame",
-    LoadGameResponse = "LoadGameResponse"
+    LoadGameResponse = "LoadGameResponse",
+    ErrorResponse = "ErrorResponse"
   }
 
 export class DualHubConnection {

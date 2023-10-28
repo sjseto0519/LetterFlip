@@ -45,7 +45,7 @@ namespace LetterFlip.Backend.Services
             if (game != null && opponentGame != null)
             {
                 var newWordView = game.WordView.ToCharArray();
-                newWordView[wordIndex * 2] = letter[0];
+                newWordView[wordIndex] = letter[0];
                 return new GuessLetterResponse
                 {
                     GameId = gameId,
@@ -86,7 +86,7 @@ namespace LetterFlip.Backend.Services
                     }
                 }
 
-                if (newWord != null)
+                if (isCorrect && newWord != null)
                 {
                     opponentGame.OpponentWord = newWord;
                     await _context.SaveChangesAsync();
@@ -212,10 +212,26 @@ namespace LetterFlip.Backend.Services
                 && g.Player2Name == playerName
                 && g.PlayerIndex == otherPlayerIndex);
 
+            if (game == null)
+            {
+                game = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
+                && g.Player1Name == playerName
+                && g.Player2Name == otherPlayerName
+                && g.PlayerIndex == otherPlayerIndex);
+            }
+
             var opponentGame = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
                 && g.Player1Name == playerName
                 && g.Player2Name == otherPlayerName
                 && g.PlayerIndex == playerIndex);
+
+            if (opponentGame == null)
+            {
+                opponentGame = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
+                && g.Player1Name == otherPlayerName
+                && g.Player2Name == playerName
+                && g.PlayerIndex == playerIndex);
+            }
 
             if (game == null || opponentGame == null)
             {

@@ -30,18 +30,6 @@
 
         public const string NewGameStarted = "NewGameStarted";
 
-        public const string GameNotFoundResponse = "GameNotFoundResponse";
-
-        public const string GameNotSavedResponse = "GameNotSavedResponse";
-
-        public const string NewGameFailedResponse = "NewGameFailedResponse";
-
-        public const string CheckTileFailedResponse = "CheckTileFailedResponse";
-
-        public const string GuessWordFailedResponse = "GuessWordFailedResponse";
-
-        public const string GuessLetterFailedResponse = "GuessLetterFailedResponse";
-
-        public const string CreateGameFailedResponse = "CreateGameFailedResponse";
+        public const string ErrorResponse = "ErrorResponse";
     }
 }

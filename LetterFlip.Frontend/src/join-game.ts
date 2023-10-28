@@ -14,6 +14,7 @@ export class JoinGame {
     hideInputs = false;
     inputUserName: HTMLInputElement;
     inputGameId: HTMLInputElement;
+    mainLogo: HTMLDivElement;
 
     constructor(private signalRService: SignalRService, private router: Router, private gameService: GameService) {
         
@@ -85,6 +86,8 @@ export class JoinGame {
     // Trigger the animation by applying a class
     this.inputUserName.classList.add('hide');
     this.inputGameId.classList.add('hide');
+
+    this.mainLogo.classList.add('flip-out');
 
     // Hide the elements after the transition
     return new Promise<void>((resolve) => {

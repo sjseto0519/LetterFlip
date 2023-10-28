@@ -20,7 +20,7 @@ namespace LetterFlip.Backend.SignalR
 
             if (tileResponse == null)
             {
-                await Clients.Caller.SendAsync(ResponseType.CheckTileFailedResponse);
+                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.CheckTileFailed);
                 return;
             }
 
@@ -36,7 +36,7 @@ namespace LetterFlip.Backend.SignalR
 
             if (game == null)
             {
-                await Clients.Caller.SendAsync(ResponseType.CreateGameFailedResponse);
+                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.CheckTileFailed);
                 return;
             }
 
@@ -62,7 +62,7 @@ namespace LetterFlip.Backend.SignalR
             }
             else
             {
-                await Clients.Caller.SendAsync(ResponseType.GameNotFoundResponse);
+                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.CheckTileFailed);
             }
         }
 
@@ -71,7 +71,7 @@ namespace LetterFlip.Backend.SignalR
             var result = await gameService.SaveGameAsync(gameId, playerName, otherPlayerName, playerIndex, savedGame);
             if (!result)
             {
-                await Clients.Caller.SendAsync(ResponseType.GameNotSavedResponse);
+                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.CheckTileFailed);
             }
         }
 
@@ -81,7 +81,7 @@ namespace LetterFlip.Backend.SignalR
 
             if (guessLetterResponse == null)
             {
-                await Clients.Caller.SendAsync(ResponseType.GuessLetterFailedResponse);
+                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.CheckTileFailed);
                 return;
             }
 
@@ -103,7 +103,7 @@ namespace LetterFlip.Backend.SignalR
 
             if (guessWordResponse == null)
             {
-                await Clients.Caller.SendAsync(ResponseType.GuessWordFailedResponse);
+                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.CheckTileFailed);
                 return;
             }
 
@@ -125,7 +125,7 @@ namespace LetterFlip.Backend.SignalR
 
             if (game == null)
             {
-                await Clients.Caller.SendAsync(ResponseType.NewGameFailedResponse);
+                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.CheckTileFailed);
                 return;
             }
 

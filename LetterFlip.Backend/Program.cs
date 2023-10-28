@@ -84,6 +84,9 @@ namespace LetterFlip.Backend
                 app.UseSwaggerUI();
             }
 
+            // Serve static files from wwwroot
+            app.UseStaticFiles();
+
             app.UseHttpsRedirection();
 
             app.UseAuthentication();
@@ -94,6 +97,9 @@ namespace LetterFlip.Backend
             app.MapHub<GameHub>("/gamehub");
 
             app.MapControllers();
+
+            // Fallback to serve index.html
+            app.MapFallbackToFile("index.html");
 
             app.Run();
         }

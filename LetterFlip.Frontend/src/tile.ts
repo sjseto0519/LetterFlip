@@ -1,4 +1,4 @@
-import { Mesh } from "@babylonjs/core";
+import { Mesh, Quaternion, Vector3 } from "@babylonjs/core";
 
 export class Tile {
     constructor(public letter: string, public mesh: Mesh) {
@@ -27,10 +27,16 @@ export class Tile {
 
     flip() {
       this.isFlipped = !this.isFlipped;
+      this.mesh.rotationQuaternion = null;
     }
 
     unflip() {
       this.isFlipped = false;
+      this.mesh.rotation.x = this.minAngle;
+      let angle = Math.PI / 8;  // 45 degrees in radians
+      let axis = new Vector3(1, 0, 0); // Y-axis
+
+      this.mesh.rotationQuaternion = Quaternion.RotationAxis(axis, angle);
     }
     
     // In your Tile class definition

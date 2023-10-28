@@ -66,7 +66,8 @@
     "start": "webpack server",
     "build:dev": "webpack",
     "analyze": "webpack --env production --analyze",
-    "test": "au test"
+    "test": "au test",
+    "prod": "au build --env prod"
   },
   "engines": {
     "node": ">=14.15.0"
