@@ -33,7 +33,7 @@ export class RealHubConnectionBuilder implements IHubConnectionBuilder {
         [DataType.OpponentCheckedTileResponse, ['gameId', 'letter', 'isCorrect']],
         [DataType.NewGameStartedResponse, ['gameId', 'opponentWord']],
         [DataType.SendMessageResponse, ['gameId', 'message']],
-        [DataType.LoadGameResponse, ['gameId', 'playerIndex', 'savedGame']],
+        [DataType.LoadGameResponse, ['gameId', 'playerUrl', 'savedGame']],
         [DataType.ErrorResponse, ['detail']]
       ]);
 

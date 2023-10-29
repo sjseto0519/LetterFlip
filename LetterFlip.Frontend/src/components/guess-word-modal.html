@@ -1,0 +1,12 @@
+<template>
+    <div class="modal modal-open" if.bind="showGuessWordModal">
+        <div class="modal-box">
+          <h2 class="text-lg">Guess a Word</h2>
+          <input type="text" value.bind="guessedWord" placeholder="Enter a word" class="input input-bordered">
+          <div class="modal-action">
+            <button class="btn btn-primary" click.delegate="submitWordGuess()">Submit Guess</button>
+            <button class="btn" click.delegate="toggleGuessWordModal()">Close</button>
+          </div>
+        </div>
+      </div>
+</template>

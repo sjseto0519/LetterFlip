@@ -14,9 +14,9 @@ namespace LetterFlip.Backend.SignalR
             this.gameService = gameService;
         }
 
-        public async Task CheckTile(string letter, int playerIndex, string gameId)
+        public async Task CheckTile(string letter, string playerUrl, string gameId)
         {
-            CheckTileResponse? tileResponse = await gameService.CheckTileAsync(letter, playerIndex, gameId);
+            CheckTileResponse? tileResponse = await gameService.CheckTileAsync(letter, playerUrl, gameId);
 
             if (tileResponse == null)
             {
@@ -36,7 +36,7 @@ namespace LetterFlip.Backend.SignalR
 
             if (game == null)
             {
-                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.CheckTileFailed);
+                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.CreateGameFailed);
                 return;
             }
 
@@ -52,36 +52,36 @@ namespace LetterFlip.Backend.SignalR
             }
         }
 
-        public async Task LoadGame(string playerName, string otherPlayerName, int playerIndex)
+        public async Task LoadGame(string playerName, string otherPlayerName, string playerUrl)
         {
-            LoadGameResponse? game = await gameService.LoadGameAsync(playerName, otherPlayerName, playerIndex);
+            LoadGameResponse? game = await gameService.LoadGameAsync(playerName, otherPlayerName, playerUrl);
 
             if (game != null)
             {
-                await Clients.Caller.SendAsync(ResponseType.LoadGameResponse, game.GameId, game.PlayerIndex, game.SavedGame);
+                await Clients.Caller.SendAsync(ResponseType.LoadGameResponse, game.GameId, game.PlayerUrl, game.SavedGame);
             }
             else
             {
-                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.CheckTileFailed);
+                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.GameNotFound);
             }
         }
 
-        public async Task SaveGame(string gameId, string playerName, string otherPlayerName, int playerIndex, string savedGame)
+        public async Task SaveGame(string gameId, string playerName, string otherPlayerName, string playerUrl, string savedGame)
         {
-            var result = await gameService.SaveGameAsync(gameId, playerName, otherPlayerName, playerIndex, savedGame);
+            var result = await gameService.SaveGameAsync(gameId, playerName, otherPlayerName, playerUrl, savedGame);
             if (!result)
             {
-                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.CheckTileFailed);
+                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.GameNotSaved);
             }
         }
 
-        public async Task GuessLetter(string letter, int wordIndex, int playerIndex, string gameId)
+        public async Task GuessLetter(string letter, int wordIndex, string playerUrl, string gameId)
         {
-            GuessLetterResponse? guessLetterResponse = await gameService.GuessLetterAsync(letter, wordIndex, playerIndex, gameId);
+            GuessLetterResponse? guessLetterResponse = await gameService.GuessLetterAsync(letter, wordIndex, playerUrl, gameId);
 
             if (guessLetterResponse == null)
             {
-                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.CheckTileFailed);
+                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.GuessLetterFailed);
                 return;
             }
 
@@ -97,13 +97,13 @@ namespace LetterFlip.Backend.SignalR
             }
         }
 
-        public async Task GuessWord(string word, int playerIndex, string gameId)
+        public async Task GuessWord(string word, string playerUrl, string gameId)
         {
-            GuessWordResponse? guessWordResponse = await gameService.GuessWordAsync(word, playerIndex, gameId);
+            GuessWordResponse? guessWordResponse = await gameService.GuessWordAsync(word, playerUrl, gameId);
 
             if (guessWordResponse == null)
             {
-                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.CheckTileFailed);
+                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.GuessWordFailed);
                 return;
             }
 
@@ -119,13 +119,13 @@ namespace LetterFlip.Backend.SignalR
             }
         }
 
-        public async Task NewGame(string gameId, string playerName, string otherPlayerName, int playerIndex)
+        public async Task NewGame(string gameId, string playerName, string otherPlayerName, string playerUrl)
         {
-            (NewGameStartedResponse YourGame, NewGameStartedResponse OpponentGame)? game = await gameService.NewGameAsync(gameId, playerName, otherPlayerName, playerIndex);
+            (NewGameStartedResponse YourGame, NewGameStartedResponse OpponentGame)? game = await gameService.NewGameAsync(gameId, playerName, otherPlayerName, playerUrl);
 
             if (game == null)
             {
-                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.CheckTileFailed);
+                await Clients.Caller.SendAsync(ResponseType.ErrorResponse, ResponseDetailType.NewGameFailed);
                 return;
             }
 

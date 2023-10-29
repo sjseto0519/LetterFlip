@@ -314,7 +314,7 @@ export class BabylonService {
             return;
           }
 
-          signalRService.checkTile(tile.letter, this.gameService.gameState.yourPlayerIndex, this.gameService.gameState.gameId);
+          signalRService.checkTile(tile.letter, this.currentGame.toGameData().playerUrl, this.gameService.gameState.gameId);
         }
       )
     );

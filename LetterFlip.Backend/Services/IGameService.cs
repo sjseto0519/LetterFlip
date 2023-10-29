@@ -6,12 +6,12 @@ namespace LetterFlip.Backend.Services
     {
         IAdaptiveWordProvider AdaptiveWordProvider { get; set; }
 
-        Task<CheckTileResponse?> CheckTileAsync(string letter, int playerIndex, string gameId);
-        Task<GuessLetterResponse?> GuessLetterAsync(string letter, int wordIndex, int playerIndex, string gameId);
-        Task<GuessWordResponse?> GuessWordAsync(string word, int playerIndex, string gameId);
+        Task<CheckTileResponse?> CheckTileAsync(string letter, string playerUrl, string gameId);
+        Task<GuessLetterResponse?> GuessLetterAsync(string letter, int wordIndex, string playerUrl, string gameId);
+        Task<GuessWordResponse?> GuessWordAsync(string word, string playerUrl, string gameId);
         Task<GameResponseBase> JoinOrCreateGameAsync(string playerName, string gameId);
-        Task<LoadGameResponse?> LoadGameAsync(string playerName, string otherPlayerName, int playerIndex);
-        Task<(NewGameStartedResponse YourGame, NewGameStartedResponse OpponentGame)?> NewGameAsync(string gameId, string playerName, string otherPlayerName, int playerIndex);
-        Task<bool> SaveGameAsync(string gameId, string playerName, string otherPlayerName, int playerIndex, string savedGame);
+        Task<LoadGameResponse?> LoadGameAsync(string playerName, string otherPlayerName, string playerUrl);
+        Task<(NewGameStartedResponse YourGame, NewGameStartedResponse OpponentGame)?> NewGameAsync(string gameId, string playerName, string otherPlayerName, string playerUrl);
+        Task<bool> SaveGameAsync(string gameId, string playerName, string otherPlayerName, string playerUrl, string savedGame);
     }
 }

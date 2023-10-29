@@ -1,0 +1,25 @@
+<template>
+    <div class="bg-gradient-to-r from-green-400 to-blue-500 text-white p-4 fixed w-full z-50">
+        <div class="container mx-auto">
+          <div class="flex items-center justify-between">
+            <!-- Left: Title -->
+            <div class="text-lg font-semibold">
+              Letter<span class="flip-text text-blue-500">Flip</span>
+            </div>
+      
+            <!-- Center: Player Names -->
+            <div class="text-base">
+              ${playerName} vs ${otherPlayerName}
+            </div>
+      
+            <!-- Right: Buttons -->
+            <div class="space-x-4 flex overflow-auto">
+              <button click.delegate="toggleHistory()" class="btn btn-accent">History</button>
+              <button disabled.bind="gameService.gameState.currentTurn === (gameService.gameState.yourPlayerIndex === 0 ? 'player2' : 'player1')" click.delegate="toggleGuessLetterModal()" class="btn btn-accent">Guess a Letter</button>
+              <button disabled.bind="gameService.gameState.currentTurn === (gameService.gameState.yourPlayerIndex === 0 ? 'player2' : 'player1')" click.delegate="toggleGuessWordModal()" class="btn btn-accent">Guess a Word</button>
+              <button click.delegate="exitGame()" class="btn btn-accent">Exit Game</button>
+            </div>
+          </div>
+        </div>
+      </div>  
+</template>

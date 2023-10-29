@@ -257,7 +257,7 @@ export const handlers = [
         }
         else if (postId === MessageType.LoadGameResponse) {
           const loadGameResponse: LoadGameResponse = {
-            playerIndex: 0,
+            playerUrl: `#/game/${gameId}/0/player1/player2`,
             gameId,
             savedGame: localStorage.getItem('savedGame')
           };

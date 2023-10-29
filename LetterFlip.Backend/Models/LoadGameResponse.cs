@@ -4,7 +4,7 @@
     {
         public string GameId { get; set; }
 
-        public int PlayerIndex { get; set; }
+        public string PlayerUrl { get; set; }
 
         public string SavedGame { get; set; }
     }

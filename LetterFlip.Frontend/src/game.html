@@ -1,139 +1,19 @@
 <template>
-  <div class="bg-gradient-to-r from-green-400 to-blue-500 text-white p-4 fixed w-full z-50">
-    <div class="container mx-auto">
-      <div class="flex items-center justify-between">
-        <!-- Left: Title -->
-        <div class="text-lg font-semibold">
-          Letter<span class="flip-text text-blue-500">Flip</span>
-        </div>
-  
-        <!-- Center: Player Names -->
-        <div class="text-base">
-          ${playerName} vs ${otherPlayerName}
-        </div>
-  
-        <!-- Right: Buttons -->
-        <div class="space-x-4 flex overflow-auto">
-          <button click.delegate="toggleHistory()" class="btn btn-accent">History</button>
-          <button disabled.bind="gameService.gameState.currentTurn === (gameService.gameState.yourPlayerIndex === 0 ? 'player2' : 'player1')" click.delegate="toggleGuessLetterModal()" class="btn btn-accent">Guess a Letter</button>
-          <button disabled.bind="gameService.gameState.currentTurn === (gameService.gameState.yourPlayerIndex === 0 ? 'player2' : 'player1')" click.delegate="toggleGuessWordModal()" class="btn btn-accent">Guess a Word</button>
-          <button click.delegate="exitGame()" class="btn btn-accent">Exit Game</button>
-        </div>
-      </div>
-    </div>
-  </div>  
-  <div class="drawer">
-    <input id="history-drawer" type="checkbox" class="drawer-toggle" checked.bind="showHistory"/>
-    <div class="drawer-content">
-      <canvas id="renderCanvas"></canvas>
-    </div>
-    <div class="drawer-side mt-[5rem]">
-      <label for="history-drawer" aria-label="close sidebar" class="drawer-overlay"></label>
-      <ul class="menu p-4 w-80 min-h-full bg-base-200 text-base-content">
-        <li class="pt-2">
-          <div class="flex items-center bg-white rounded-lg shadow-lg">
-            <input value.bind="message" class="flex-1 p-2 rounded-l-lg" type="text" placeholder="Type your message...">
-            <button click.delegate="sendMessage()" class="bg-blue-500 p-2 rounded-r-lg text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
-                <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.876L5.999 12zm0 0h7.5" />
-              </svg>
-            </button>
-          </div>          
-        </li>
-        <li repeat.for="item of reversedHistory" class="hover:bg-gray-200 rounded p-2 text-center">
-          <div class="alert shadow-lg">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <div if.bind="!item.type">
-              <h3 class="font-bold">${item.yours ? 'Your Action' : 'Opponent Action'}</h3>
-              <div class="text-xs" style="text-wrap: pretty">${item.item}</div>
-            </div>
-            <div if.bind="item.type" class="chat ${item.yours ? 'chat-start' : 'chat-end w-full'}">
-              <div class="chat-header">
-                ${item.yours ? 'Your' : 'Opponent'} ${item.type}
-              </div>
-              <div class="chat-bubble !bg-blue-500">${item.item}</div>
-            </div>
-          </div>
-        </li>
-      </ul>
-    </div>
-  </div>  
-  <!-- Guess a Letter Modal -->
-<div class="modal modal-open" if.bind="showGuessLetterModal">
-  <div class="modal-box">
-    <h2 class="text-lg">Guess a Letter</h2>
-    <div class="flex space-x-2">
-      <input repeat.for="position of guessedPositions"
-             type="text" 
-             value.bind="position" 
-             placeholder="-" 
-             maxlength="1"
-             input.trigger="updateGuess($index, $event.target.value)"
-             class="input input-bordered w-8 text-center p-0">
-    </div>
-    <div class="modal-action">
-      <button class="btn btn-primary" click.delegate="submitLetterGuess()">Submit Guess</button>
-      <button class="btn" click.delegate="toggleGuessLetterModal()">Close</button>
-    </div>
-  </div>
-</div>
-<!-- Guess a Word Modal -->
-<div class="modal modal-open" if.bind="showGuessWordModal">
-  <div class="modal-box">
-    <h2 class="text-lg">Guess a Word</h2>
-    <input type="text" value.bind="guessedWord" placeholder="Enter a word" class="input input-bordered">
-    <div class="modal-action">
-      <button class="btn btn-primary" click.delegate="submitWordGuess()">Submit Guess</button>
-      <button class="btn" click.delegate="toggleGuessWordModal()">Close</button>
-    </div>
-  </div>
-</div>
-<!-- Game Over Modal -->
-<div class="modal modal-open" if.bind="isGameOver">
-  <div class="modal-box">
-    <h2 class="text-lg">Game Over</h2>
-    <p>${winnerName} is the winner!</p>
-    <div class="modal-action">
-      <button class="btn btn-primary" disabled.bind="isNewGameRequested" click.delegate="playNewGame()">
-        <svg if.bind="isNewGameRequested" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        Play New Game
-      </button>
-      <button class="btn btn-accent" click.delegate="exitGame()">Exit</button>
-    </div>
-  </div>
-</div>
-<div class="fixed bottom-[6rem] right-4 z-50" if.bind="hasTypedElement">
-  <div class="alert shadow-lg" style="grid-auto-flow: column">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" class="w-6 h-6 stroke-info">
-      <path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 01-.825-.242m9.345-8.334a2.126 2.126 0 00-.476-.095 48.64 48.64 0 00-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0011.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155" />
-    </svg>    
-    <div if.bind="showLastMessageToast" >
-      <h3 class="font-bold">Last Message</h3>
-      <div class="text-xs" style="text-wrap: pretty">${lastElementWithTypeMessage.item}</div>
-    </div>
-    <button class="btn btn-sm" show.bind="showLastMessageToast === true" click.delegate="showLastMessageToast = false">Hide</button>
-    <button class="btn btn-sm" show.bind="showLastMessageToast === false" click.delegate="showLastMessageToast = true">Show</button>
-  </div>
-</div>
-<div class="fixed bottom-4 right-4 z-50" if.bind="hasTypelessElement">
-  <div class="alert shadow-lg" style="grid-auto-flow: column">
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-    </svg>
-    <div if.bind="showLastActionToast" >
-      <h3 class="font-bold">Last Action</h3>
-      <div class="text-xs" style="text-wrap: pretty">${lastElementWithTypeAction.item}</div>
-    </div>
-    <button class="btn btn-sm" show.bind="showLastActionToast === true" click.delegate="showLastActionToast = false">Hide</button>
-    <button class="btn btn-sm" show.bind="showLastActionToast === false" click.delegate="showLastActionToast = true">Show</button>
-  </div>
-</div>
-<div class="bg-gradient-to-r from-green-400 to-blue-500 text-white p-4 fixed bottom-[-3px] left-0 h-[3rem] w-full z-40">
+  <require from="./components/header"></require>
+  <require from="./components/action-message"></require>
+  <require from="./components/chat-message"></require>
+  <require from="./components/drawer"></require>
+  <require from="./components/game-over-modal"></require>
+  <require from="./components/guess-letter-modal"></require>
+  <require from="./components/guess-word-modal"></require>
+  <header view-model.ref="headerRef"></header>
+  <action-message view-model.ref="actionMessageRef"></action-message>
+  <chat-message view-model.ref="chatMessageRef"></chat-message>
+  <drawer view-model.ref="drawerRef"></drawer>
+  <game-over-modal view-model.ref="gameOverRef"></game-over-modal>
+  <guess-letter-modal view-model.ref="guessLetterRef"></guess-letter-modal>
+  <guess-word-modal view-model.ref="guessWordRef"></guess-word-modal>
+  <div class="bg-gradient-to-r from-green-400 to-blue-500 text-white p-4 fixed bottom-[-3px] left-0 h-[3rem] w-full z-40">
 
-</div>
+  </div>
   </template>

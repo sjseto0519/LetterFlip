@@ -78,7 +78,7 @@ export interface SendMessageResponse {
 
 export interface LoadGameResponse {
   gameId: string;
-  playerIndex: number;
+  playerUrl: string;
   savedGame: string;
 }
 
@@ -91,7 +91,7 @@ export class SignalRService {
   
     constructor() {
       const mockConnectionBuilder = new MockHubConnectionBuilder();
-      const connectionBuilder = new RealHubConnectionBuilder("/gamehub");
+      const connectionBuilder = new RealHubConnectionBuilder("https://localhost:7213/gamehub");
       this.connection = new DualHubConnection(connectionBuilder);
     }
   
@@ -106,31 +106,31 @@ export class SignalRService {
     };
 
     public async loadGame(gameData: GameData) {
-      await this.connection.invoke(MessageType.LoadGame, gameData.playerName, gameData.otherPlayerName, gameData.playerIndex);
+      await this.connection.invoke(MessageType.LoadGame, gameData.playerName, gameData.otherPlayerName, gameData.playerUrl);
     }
 
     public async saveGame(gameData: GameData, savedGame: string) {
-      await this.connection.invoke(MessageType.SaveGame, gameData.gameId, gameData.playerName, gameData.otherPlayerName, gameData.playerIndex, savedGame);
+      await this.connection.invoke(MessageType.SaveGame, gameData.gameId, gameData.playerName, gameData.otherPlayerName, gameData.playerUrl, savedGame);
     }
 
     public async joinGame(userName: string, gameId: string) {
         await this.connection.invoke(MessageType.JoinOrCreateGame, userName, gameId);
       }
 
-    public async checkTile(letter: string, playerIndex: number, gameId: string) {
-      await this.connection.invoke(MessageType.CheckTile, letter, playerIndex, gameId);
+    public async checkTile(letter: string, playerUrl: string, gameId: string) {
+      await this.connection.invoke(MessageType.CheckTile, letter, playerUrl, gameId);
     }
 
-    public async guessLetter(letter: string, wordIndex: number, playerIndex: number, gameId: string) {
-      await this.connection.invoke(MessageType.GuessLetter, letter, wordIndex, playerIndex, gameId);
+    public async guessLetter(letter: string, wordIndex: number, playerUrl: string, gameId: string) {
+      await this.connection.invoke(MessageType.GuessLetter, letter, wordIndex, playerUrl, gameId);
     }
 
-    public async guessWord(word: string, playerIndex: number, gameId: string) {
-      await this.connection.invoke(MessageType.GuessWord, word, playerIndex, gameId);
+    public async guessWord(word: string, playerUrl: string, gameId: string) {
+      await this.connection.invoke(MessageType.GuessWord, word, playerUrl, gameId);
     }
 
     public async requestNewGame(gameData: GameData) {
-      await this.connection.invoke(MessageType.NewGame, gameData.gameId, gameData.playerName, gameData.otherPlayerName, gameData.playerIndex);
+      await this.connection.invoke(MessageType.NewGame, gameData.gameId, gameData.playerName, gameData.otherPlayerName, gameData.playerUrl);
     }
 
     public async sendMessage(message: string, gameId: string) {

@@ -7,6 +7,13 @@ import { Events } from 'utils/events';
 import { EventAggregator } from 'utils/event-aggregator';
 import { GameOverEventData, GuessLetterCorrectEventData, GuessWordCorrectEventData, NewGameStartedEventData, OpponentGuessedWordCorrectlyEventData } from 'interfaces/event-data';
 import { GameState } from 'game-state';
+import { HeaderCustomElement } from 'components/header';
+import { GuessWordModalCustomElement } from 'components/guess-word-modal';
+import { GuessLetterModalCustomElement } from 'components/guess-letter-modal';
+import { GameOverModalCustomElement } from 'components/game-over-modal';
+import { DrawerCustomElement } from 'components/drawer';
+import { ChatMessageCustomElement } from 'components/chat-message';
+import { ActionMessageCustomElement } from 'components/action-message';
 
 export interface HistoryItem {
   item: string;
@@ -18,7 +25,7 @@ export interface GameData {
   gameId: string;
   playerName: string;
   otherPlayerName: string;
-  playerIndex: number;
+  playerUrl: string;
 }
 
 export interface SavedGame {
@@ -38,49 +45,18 @@ export class Game {
     playerName: string;
     otherPlayerName: string;
     playerIndex: number;
-    showHistory = false;
-    historyItems: HistoryItem[] = []; // Your history data
-    isGameOver = false;
-    winner = '';
-    showGuessLetterModal = false;
-    showGuessWordModal = false;
-    guessedLetter = '';
-    guessedWord = '';
-    guessedPosition = 0;
-    message = '';
-  guessedPositions = [];
-  isNewGameRequested = false;
-  showLastActionToast = true;
-  showLastMessageToast = true;
 
-  get winnerName() {
-    if (this.winner) {
-      return this.winner === 'player1' ? this.playerName : this.otherPlayerName;
-    }
-    else
-    {
-      return '';
-    }
-  }
+  headerRef: HeaderCustomElement;
+  actionMessageRef: ActionMessageCustomElement;
+  chatMessageRef: ChatMessageCustomElement;
+  drawerRef: DrawerCustomElement;
+  gameOverRef: GameOverModalCustomElement;
+  guessLetterRef: GuessLetterModalCustomElement;
+  guessWordRef: GuessWordModalCustomElement;
 
-  get reversedHistory() {
-    return [...this.historyItems].reverse();
-  }
-
-  get lastElementWithTypeAction() {
-    return [...this.historyItems].reverse().find(el => el.type !== 'Message');
-  }
-
-  get lastElementWithTypeMessage() {
-    return [...this.historyItems].reverse().find(el => el.type === 'Message' && !el.yours);
-  }
-
-  get hasTypelessElement() {
-    return this.historyItems.findIndex(el => !el.type) > -1;
-  }
-
-  get hasTypedElement() {
-    return this.historyItems.findIndex(el => !!el.type && !el.yours) > -1;
+  getTrimmedHash() {
+    const hash = window.location.hash;
+    return hash.endsWith('/') ? hash.slice(0, -1) : hash;
   }
 
   toGameData(): GameData {
@@ -88,73 +64,19 @@ export class Game {
       gameId: this.gameId,
       playerName: this.playerName,
       otherPlayerName: this.otherPlayerName,
-      playerIndex: this.gameService.gameState.yourPlayerIndex
+      playerUrl: decodeURIComponent(this.getTrimmedHash())
     };
   }
 
   saveGame() {
     const savedGame: SavedGame = {
       gameData: this.toGameData(),
-      history: this.historyItems,
+      history: this.drawerRef.historyItems,
       gameState: this.gameService.gameState
     };
     const str = JSON.stringify(savedGame);
     this.signalRService.saveGame(savedGame.gameData, str);
     localStorage.setItem('savedGame', str);
-  }
-
-  toggleGuessLetterModal() {
-    this.showGuessLetterModal = !this.showGuessLetterModal;
-  }
-
-  toggleGameOverModal() {
-    this.isGameOver = !this.isGameOver;
-  }
-
-  updateGuess(position, value: string) {
-    // Create a new array with all empty strings
-    const newGuessedPositions = new Array(this.guessedPositions.length).fill('');
-
-    // Update the selected position
-    newGuessedPositions[position] = value.toUpperCase();
-
-    // Replace the old array with the new one
-    this.guessedPositions = newGuessedPositions;
-
-    this.guessedPosition = position;
-  }
-
-  submitLetterGuess() {
-    const guessedLetter = this.guessedPositions.find(Boolean);
-    if (guessedLetter) {
-      this.signalRService.guessLetter(guessedLetter, this.guessedPosition, this.gameService.gameState.yourPlayerIndex, this.gameService.gameState.gameId);
-      this.toggleGuessLetterModal();
-    }
-  }
-
-    toggleGuessWordModal() {
-      this.showGuessWordModal = !this.showGuessWordModal;
-    }
-
-    submitWordGuess() {
-      if (this.guessedWord) {
-        this.guessedWord = this.guessedWord.toUpperCase();
-        this.signalRService.guessWord(this.guessedWord, this.gameService.gameState.yourPlayerIndex, this.gameService.gameState.gameId);
-        this.toggleGuessWordModal();
-      }
-    }
-
-  toggleHistory() {
-    this.showHistory = !this.showHistory;
-  }
-
-  playNewGame() {
-    this.isNewGameRequested = true;
-    this.signalRService.requestNewGame(this.toGameData());
-  }
-
-  exitGame() {
-    this.router.navigateToRoute('join-game');
   }
 
   activate(params) {
@@ -178,14 +100,6 @@ export class Game {
     this.signalRService.onSendMessageResponse(this.handleSendMessageResponse.bind(this));
     this.signalRService.onLoadGameResponse(this.handleLoadGameResponse.bind(this));
     this.signalRService.onErrorResponse(this.HandleErrorResponse.bind(this));
-    const playerState = this.gameService.gameState.getYourPlayerState();
-    if (!playerState) {
-      this.signalRService.loadGame(this.toGameData());
-    }
-    else
-    {
-      this.guessedPositions = Array.from({ length: playerState.currentDifficulty }, () => '');
-    }
   }
 
   deactivate() {
@@ -194,40 +108,18 @@ export class Game {
     window.location.href = '/';
   }
 
-  get windowWidth() {
-    return Math.max(800, window.innerWidth);
+  async attached() {
+  const playerState = this.gameService.gameState.getYourPlayerState();
+  if (!playerState) {
+    await this.signalRService.startConnection();
+    this.signalRService.loadGame(this.toGameData());
   }
-
-  get windowHeight() {
-    return Math.max(512, window.innerHeight);
+  else
+  {
+    this.guessLetterRef.setGuessedPositions(playerState.currentDifficulty);
+    this.saveGame();
   }
-
-  private resizeCanvas() {
-    const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
-    if (canvas) {
-      canvas.width = this.windowWidth - 40;
-      canvas.height = this.windowHeight - 40;
-    }
-  }
-
-  attached() {
-    const canvas = document.getElementById('renderCanvas') as HTMLCanvasElement;
-    canvas.width = this.windowWidth - 40;
-    canvas.height = this.windowHeight - 40;
-    this.babylonService.initialize(canvas, this.signalRService, this.eventAggregator);
-  // Attach the window resize event listener
-  window.addEventListener('resize', this.resizeCanvas.bind(this));
 }
-
-detached() {
-  // Remove the event listener when the component is detached
-  window.removeEventListener('resize', this.resizeCanvas.bind(this));
-}
-
-  sendMessage() {
-    this.historyItems.push({ item: this.message, yours: true, type: 'Message' });
-    this.signalRService.sendMessage(this.message, this.gameService.gameState.gameId);
-  }
 
   private async HandleErrorResponse(errorResponse: ErrorResponse) {
     console.error(errorResponse.detail);
@@ -238,15 +130,15 @@ detached() {
       return;
     }
 
-    if (loadGameResponse.playerIndex !== this.playerIndex) {
+    if (loadGameResponse.playerUrl !== this.toGameData().playerUrl) {
       return;
     }
 
     const savedGame: SavedGame = JSON.parse(loadGameResponse.savedGame) as SavedGame;
     this.updateObjectProperties(this.gameService.gameState, savedGame.gameState);
-    this.historyItems = savedGame.history;
+    this.drawerRef.historyItems = savedGame.history;
 
-    this.guessedPositions = Array.from({ length: this.gameService.gameState.getYourPlayerState().currentDifficulty }, () => '');
+    this.guessLetterRef.setGuessedPositions(this.gameService.gameState.getYourPlayerState().currentDifficulty);
   }
 
   // Utility function to update object properties recursively
@@ -270,7 +162,7 @@ detached() {
       return;
     }
 
-    this.historyItems.push({ item: sendMessageResponse.message, yours: false, type: 'Message' });
+    this.drawerRef.historyItems.push({ item: sendMessageResponse.message, yours: false, type: 'Message' });
   }
 
   private async handleCheckTileResponse(checkTileResponse: CheckTileResponse) {
@@ -282,7 +174,7 @@ detached() {
     if (checkTileResponse.occurrences === 0) {
       this.gameService.nextTurn();
     }
-    this.historyItems.push({ item: 'Guessed tile ' + checkTileResponse.letter + ' and found ' + checkTileResponse.occurrences + ' occurrences', yours: true});
+    this.drawerRef.historyItems.push({ item: 'Guessed tile ' + checkTileResponse.letter + ' and found ' + checkTileResponse.occurrences + ' occurrences', yours: true});
     this.eventAggregator.publish(Events.CheckTile, { 'letter': checkTileResponse.letter, 'occurrences': checkTileResponse.occurrences });
 
   }
@@ -293,13 +185,14 @@ detached() {
       return;
     }
 
-    this.historyItems = [];
+    this.drawerRef.historyItems = [];
     this.gameService.newGame(this.gameService.gameState.gameId, this.gameService.gameState.yourPlayerIndex === 0 ? 1 : 0, this.playerName, this.otherPlayerName, newGameStarted.opponentWord);
-    this.guessedPositions = Array.from({ length: this.gameService.gameState.getYourPlayerState().currentDifficulty }, () => '');
+    this.guessLetterRef.setGuessedPositions(this.gameService.gameState.getYourPlayerState().currentDifficulty);
     const data: NewGameStartedEventData = {};
     this.eventAggregator.publish(Events.NewGameStarted, data);
-    this.isNewGameRequested = false;
-    this.toggleGameOverModal();
+    this.gameOverRef.isNewGameRequested = false;
+    this.saveGame();
+    this.gameOverRef.toggleGameOverModal();
   }
 
   private async handleGuessLetter(guessLetterResponse: GuessLetterResponse) {
@@ -310,12 +203,12 @@ detached() {
 
     if (!guessLetterResponse.isCorrect)
     {
-      this.historyItems.push({ item: `Guessed the letter ${guessLetterResponse.letter} incorrectly at position ${guessLetterResponse.position + 1}`, yours: true});
+      this.drawerRef.historyItems.push({ item: `Guessed the letter ${guessLetterResponse.letter} incorrectly at position ${guessLetterResponse.position + 1}`, yours: true});
       this.gameService.nextTurn();
     }
     else
     {
-      this.historyItems.push({ item: `Guessed the letter ${guessLetterResponse.letter} correctly at position ${guessLetterResponse.position + 1}`, yours: true});
+      this.drawerRef.historyItems.push({ item: `Guessed the letter ${guessLetterResponse.letter} correctly at position ${guessLetterResponse.position + 1}`, yours: true});
       const state = this.gameService.gameState.getYourPlayerState();
       state.wordView[guessLetterResponse.position] = guessLetterResponse.letter;
       const data: GuessLetterCorrectEventData = { letter: guessLetterResponse.letter, position: guessLetterResponse.position };
@@ -337,12 +230,12 @@ detached() {
     
     if (!opponentCheckedTileResponse.isCorrect)
     {
-      this.historyItems.push({ item: 'Opponent incorrectly guessed letter ' + opponentCheckedTileResponse.letter, yours: false});
+      this.drawerRef.historyItems.push({ item: 'Opponent incorrectly guessed letter ' + opponentCheckedTileResponse.letter, yours: false});
       this.gameService.nextTurn();
     }
     else
     {
-      this.historyItems.push({ item: 'Opponent correctly guessed letter ' + opponentCheckedTileResponse.letter, yours: false});
+      this.drawerRef.historyItems.push({ item: 'Opponent correctly guessed letter ' + opponentCheckedTileResponse.letter, yours: false});
     }
   }
 
@@ -354,24 +247,24 @@ detached() {
 
     if (!guessWordResponse.isCorrect)
     {
-      this.historyItems.push({ item: `Incorrectly guessed the word ${guessWordResponse.word}`, yours: true});
+      this.drawerRef.historyItems.push({ item: `Incorrectly guessed the word ${guessWordResponse.word}`, yours: true});
       this.gameService.nextTurn();
     }
     else
     {
       if (guessWordResponse.isGameOver) {
-        this.historyItems.push({ item: `Correct! The word was ${guessWordResponse.word}`, yours: true});
-        this.winner = 'player1';
-        this.toggleGameOverModal();
-        const data: GameOverEventData = { winner: this.winner };
+        this.drawerRef.historyItems.push({ item: `Correct! The word was ${guessWordResponse.word}`, yours: true});
+        this.gameOverRef.winner = 'player1';
+        this.gameOverRef.toggleGameOverModal();
+        const data: GameOverEventData = { winner: this.gameOverRef.winner };
         this.eventAggregator.publish(Events.GameOver, data);
       }
       else {
         const playerState = this.gameService.gameState.getYourPlayerState();
         playerState.currentDifficulty++;
         playerState.wordView = new Array(playerState.currentDifficulty).fill('_');
-        this.guessedPositions = Array.from({ length: this.gameService.gameState.getYourPlayerState().currentDifficulty }, () => '');
-        this.historyItems.push({ item: `Correct! The word was ${guessWordResponse.word}`, yours: true});
+        this.guessLetterRef.setGuessedPositions(this.gameService.gameState.getYourPlayerState().currentDifficulty);
+        this.drawerRef.historyItems.push({ item: `Correct! The word was ${guessWordResponse.word}`, yours: true});
         const data: GuessWordCorrectEventData = { word: guessWordResponse.word };
         this.eventAggregator.publish(Events.GuessWordCorrect, data);
       }
@@ -388,7 +281,7 @@ detached() {
       return;
     }
 
-    this.historyItems.push({ item: 'Opponent incorrectly guessed letter ' + opponentGuessedLetterIncorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterIncorrectlyResponse.position + 1), yours: false});
+    this.drawerRef.historyItems.push({ item: 'Opponent incorrectly guessed letter ' + opponentGuessedLetterIncorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterIncorrectlyResponse.position + 1), yours: false});
     this.gameService.nextTurn();
   }
 
@@ -405,7 +298,7 @@ detached() {
 
     this.gameService.gameState.getOpponentPlayerState().wordView[opponentGuessedLetterCorrectlyResponse.position] = opponentGuessedLetterCorrectlyResponse.letter;
 
-    this.historyItems.push({ item: 'Opponent correctly guessed the letter ' + opponentGuessedLetterCorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterCorrectlyResponse.position + 1), yours: false});
+    this.drawerRef.historyItems.push({ item: 'Opponent correctly guessed the letter ' + opponentGuessedLetterCorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterCorrectlyResponse.position + 1), yours: false});
 
     if (opponentGuessedLetterCorrectlyResponse.letter) {
       const opponentGameState = this.gameService.gameState.getOpponentPlayerState();
@@ -422,7 +315,7 @@ detached() {
     {
       return;
     }
-    this.historyItems.push({ item: 'Opponent incorrectly guessed word ' + opponentGuessedWordIncorrectlyResponse.word, yours: false});
+    this.drawerRef.historyItems.push({ item: 'Opponent incorrectly guessed word ' + opponentGuessedWordIncorrectlyResponse.word, yours: false});
     this.gameService.nextTurn();
   }
 
@@ -437,12 +330,12 @@ detached() {
       return;
     }
 
-    this.historyItems.push({ item: 'Opponent correctly guessed the word ' + opponentGuessedWordCorrectlyResponse.word, yours: false});
+    this.drawerRef.historyItems.push({ item: 'Opponent correctly guessed the word ' + opponentGuessedWordCorrectlyResponse.word, yours: false});
 
     if (opponentGuessedWordCorrectlyResponse.isGameOver) {
-      this.winner = 'player2';
-      this.toggleGameOverModal();
-      const data: GameOverEventData = { winner: this.winner };
+      this.gameOverRef.winner = 'player2';
+      this.gameOverRef.toggleGameOverModal();
+      const data: GameOverEventData = { winner: this.gameOverRef.winner };
       this.eventAggregator.publish(Events.GameOver, data);
     }
     else if (opponentGuessedWordCorrectlyResponse.newWord) {

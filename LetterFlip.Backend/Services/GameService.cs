@@ -15,10 +15,10 @@ namespace LetterFlip.Backend.Services
             _context = context;
         }
 
-        public async Task<CheckTileResponse?> CheckTileAsync(string letter, int playerIndex, string gameId)
+        public async Task<CheckTileResponse?> CheckTileAsync(string letter, string playerUrl, string gameId)
         {
             var game = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
-                && g.PlayerIndex != playerIndex);
+                && g.PlayerUrl != playerUrl);
 
             if (game != null)
             {
@@ -34,13 +34,13 @@ namespace LetterFlip.Backend.Services
             return null;
         }
 
-        public async Task<GuessLetterResponse?> GuessLetterAsync(string letter, int wordIndex, int playerIndex, string gameId)
+        public async Task<GuessLetterResponse?> GuessLetterAsync(string letter, int wordIndex, string playerUrl, string gameId)
         {
             var game = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
-                && g.PlayerIndex == playerIndex);
+                && g.PlayerUrl == playerUrl);
 
             var opponentGame = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
-                           && g.PlayerIndex != playerIndex);
+                           && g.PlayerUrl != playerUrl);
 
             if (game != null && opponentGame != null)
             {
@@ -59,10 +59,10 @@ namespace LetterFlip.Backend.Services
             return null;
         }
 
-        public async Task<GuessWordResponse?> GuessWordAsync(string word, int playerIndex, string gameId)
+        public async Task<GuessWordResponse?> GuessWordAsync(string word, string playerUrl, string gameId)
         {
             var opponentGame = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
-                && g.PlayerIndex != playerIndex);
+                && g.PlayerUrl != playerUrl);
 
             if (opponentGame != null)
             {
@@ -75,7 +75,7 @@ namespace LetterFlip.Backend.Services
                 if (isCorrect && !isGameOver)
                 {
                     var game = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
-                        && g.PlayerIndex == playerIndex);
+                        && g.PlayerUrl == playerUrl);
 
                     if (game != null)
                     {
@@ -112,9 +112,8 @@ namespace LetterFlip.Backend.Services
 
             await _context.SaveChangesAsync();
 
-            var game = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
-                && g.PlayerIndex == 0);
-            if (game == null)
+            var games = await _context.Games.Where(x => x.GameId == gameId).ToListAsync();
+            if (games.Count == 0)
             {
                 Game game1 = new Game
                 {
@@ -125,7 +124,7 @@ namespace LetterFlip.Backend.Services
                      InProgress = true,
                      Player1Name = playerName,
                      Player2Name = "",
-                     PlayerIndex = 0,
+                     PlayerUrl = "",
                      GameState = "",
                      OpponentWord = AdaptiveWordProvider.GetRandomWord(Enumerations.DifficultyType.Easy),
                 };
@@ -139,7 +138,7 @@ namespace LetterFlip.Backend.Services
                     InProgress = true,
                     Player1Name = "",
                     Player2Name = playerName,
-                    PlayerIndex = 1,
+                    PlayerUrl = "",
                     GameState = "",
                     OpponentWord = AdaptiveWordProvider.GetRandomWord(Enumerations.DifficultyType.Easy),
                 };
@@ -157,35 +156,38 @@ namespace LetterFlip.Backend.Services
                 };
             }
 
+            var foundGame = games.FirstOrDefault(g => g.Player1Name == "");
 
-            var foundGame = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
-                && g.Player1Name == ""
-                && g.PlayerIndex == 1);
+            var otherGame = games.FirstOrDefault(g => g.Player2Name == "");
 
-            if (foundGame != null)
+            if (foundGame != null && otherGame != null && foundGame.Player2Name != null)
             {
-                if (game.Player2Name == "")
-                {
-                    game.Player2Name = playerName;
-                }
+                var foundUrl = $"#/game/{gameId}/1/{playerName}/{foundGame.Player2Name}";
+
+                var otherUrl = $"#/game/{gameId}/0/{foundGame.Player2Name}/{playerName}";
+
+                otherGame.Player2Name = playerName;
+                otherGame.PlayerUrl = otherUrl;
 
                 foundGame.Player1Name = playerName;
+                foundGame.PlayerUrl = foundUrl;
+
                 await _context.SaveChangesAsync();
 
                 return new JoinGameResponse
                 {
                     PlayerName = foundGame.Player2Name,
                     OpponentWord = foundGame.OpponentWord,
-                    YourWord = game.OpponentWord,
+                    YourWord = otherGame.OpponentWord,
                 };
             }
 
             return null;
         }
 
-        public async Task<LoadGameResponse?> LoadGameAsync(string playerName, string otherPlayerName, int playerIndex)
+        public async Task<LoadGameResponse?> LoadGameAsync(string playerName, string otherPlayerName, string playerUrl)
         {
-            var game = await _context.Games.FirstOrDefaultAsync(g => g.PlayerIndex == playerIndex 
+            var game = await _context.Games.FirstOrDefaultAsync(g => g.PlayerUrl == playerUrl
                 && g.Player1Name == playerName 
                 && g.Player2Name == otherPlayerName);
             if (game != null)
@@ -193,45 +195,27 @@ namespace LetterFlip.Backend.Services
                 return new LoadGameResponse
                 {
                     GameId = game.GameId,
-                    PlayerIndex = game.PlayerIndex,
+                    PlayerUrl = game.PlayerUrl,
                     SavedGame = game.GameState
                 };
             }
             return null;
         }
 
-        public async Task<(NewGameStartedResponse YourGame, NewGameStartedResponse OpponentGame)?> NewGameAsync(string gameId, string playerName, string otherPlayerName, int playerIndex)
+        public async Task<(NewGameStartedResponse YourGame, NewGameStartedResponse OpponentGame)?> NewGameAsync(string gameId, string playerName, string otherPlayerName, string playerUrl)
         {
-            var otherPlayerIndex = playerIndex == 0 ? 1 : 0;
-
             var newWord = this.AdaptiveWordProvider.GetRandomWord(Enumerations.DifficultyType.Easy);
             var newWordOpponent = this.AdaptiveWordProvider.GetRandomWord(Enumerations.DifficultyType.Easy);
 
             var game = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
-                && g.Player1Name == otherPlayerName
-                && g.Player2Name == playerName
-                && g.PlayerIndex == otherPlayerIndex);
-
-            if (game == null)
-            {
-                game = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
                 && g.Player1Name == playerName
                 && g.Player2Name == otherPlayerName
-                && g.PlayerIndex == otherPlayerIndex);
-            }
+                && g.PlayerUrl == playerUrl);
 
             var opponentGame = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
-                && g.Player1Name == playerName
-                && g.Player2Name == otherPlayerName
-                && g.PlayerIndex == playerIndex);
-
-            if (opponentGame == null)
-            {
-                opponentGame = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
                 && g.Player1Name == otherPlayerName
                 && g.Player2Name == playerName
-                && g.PlayerIndex == playerIndex);
-            }
+                && g.PlayerUrl != playerUrl);
 
             if (game == null || opponentGame == null)
             {
@@ -256,24 +240,15 @@ namespace LetterFlip.Backend.Services
             return (a, b);
         }
 
-        public async Task<bool> SaveGameAsync(string gameId, string playerName, string otherPlayerName, int playerIndex, string savedGame)
+        public async Task<bool> SaveGameAsync(string gameId, string playerName, string otherPlayerName, string playerUrl, string savedGame)
         {
             try
             {
                 var game = await _context.Games.FirstOrDefaultAsync(g => g.GameId == gameId
-                    && g.PlayerIndex == playerIndex
-                    && g.Player1Name == playerName
-                    && g.Player2Name == otherPlayerName);
+                    && g.PlayerUrl == playerUrl);
                 if (game == null)
                 {
-                    await _context.Games.AddAsync(new Game
-                    {
-                        GameId = gameId,
-                        Player1Name = playerName,
-                        Player2Name = otherPlayerName,
-                        PlayerIndex = playerIndex,
-                        GameState = savedGame
-                    });
+                    return false;
                 }
                 else
                 {
@@ -282,7 +257,7 @@ namespace LetterFlip.Backend.Services
                 await _context.SaveChangesAsync();
                 return true;
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 return false;
             }
