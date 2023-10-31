@@ -30,13 +30,3 @@ export interface HistoryItem {
     saveGame: () => void;
     toGameData: () => GameData;
   }
-
-  export interface Children {
-    headerRef: Header;
-    guessWordRef: GuessWordModal;
-    guessLetterRef: GuessLetterModal;
-    gameOverRef: GameOverModal;
-    drawerRef: Drawer;
-    chatMessageRef: ChatMessage;
-    actionMessageRef: ActionMessage;
-  }

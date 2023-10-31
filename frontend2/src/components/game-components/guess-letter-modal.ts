@@ -2,10 +2,9 @@ import { bindable, containerless, inject } from "aurelia";
 import { Game } from "../game";
 import { Header } from "./header";
 import { type IGameService, type ISignalRService, MyGameService, MySignalRService } from "../../interfaces/services";
-import { ILifecycleEvent, type ILifecycleService, LifecycleHooks, MyLifecycleService } from "../../interfaces/lifecycle";
 
 @containerless
-@inject(MySignalRService, MyGameService, MyLifecycleService)
+@inject(MySignalRService, MyGameService)
 export class GuessLetterModal {
     
   @bindable parentViewModel?: Game;
@@ -13,24 +12,9 @@ export class GuessLetterModal {
     guessedPositions: string[] = [];
     guessedPosition = 0;
 
-    constructor(private signalRService: ISignalRService, private gameService: IGameService, private lifecycleService: ILifecycleService) {
-      this.lifecycleService.subscribe(GuessLetterModal, LifecycleHooks.Bound, this.handleLifecycleEvent.bind(this));
-    }
+    constructor(private signalRService: ISignalRService, private gameService: IGameService) {
 
-    private handleLifecycleEvent(event: ILifecycleEvent) {
-      if (event.lifecycleHook === LifecycleHooks.Bound) {
-        if (this.parentViewModel) {
-          this.headerRef = this.parentViewModel.children.headerRef;
-        }
-      }
     }
-  
-      bound(initiator: any, parent: any) {
-        if (this.parentViewModel) {
-          this.parentViewModel.children.guessLetterRef = this;
-        }
-        this.lifecycleService.notifyLifecycleEvent(GuessLetterModal, LifecycleHooks.Bound);
-      }
 
       get showGuessLetterModal() {
         return this.headerRef?.showGuessLetterModal;
@@ -66,10 +50,4 @@ export class GuessLetterModal {
       setGuessedPositions(difficulty: number) {
         this.guessedPositions = Array.from({ length: difficulty }, () => '');
       }
-
-      detached() {
-        this.lifecycleService.unsubscribe(GuessLetterModal, LifecycleHooks.Bound);
-        this.lifecycleService.unregisterComponent(GuessLetterModal);
-      }
-
 }

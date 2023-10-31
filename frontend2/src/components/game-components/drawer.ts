@@ -48,12 +48,6 @@ detached() {
     window.removeEventListener('resize', this.resizeCanvas.bind(this));
   }
 
-      bound(initiator: any, parent: any) {
-        if (this.parentViewModel) {
-          this.parentViewModel.children.drawerRef = this;
-        }
-      }
-
       toggleHistory() {
         this.showHistory = !this.showHistory;
       }

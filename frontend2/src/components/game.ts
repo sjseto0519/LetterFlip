@@ -9,26 +9,20 @@ import { Drawer } from "./game-components/drawer";
 import { GameOverModal } from "./game-components/game-over-modal";
 import { GuessWordModal } from "./game-components/guess-word-modal";
 import { GuessLetterModal } from "./game-components/guess-letter-modal";
-import { Children, GameData, SavedGame } from "../interfaces/game-data";
+import { GameData, SavedGame } from "../interfaces/game-data";
 import { CheckTileResponse, ErrorResponse, GuessLetterResponse, GuessWordResponse, LoadGameResponse, NewGameStartedResponse, 
     OpponentCheckedTileResponse, OpponentGuessedLetterCorrectlyResponse, OpponentGuessedLetterIncorrectlyResponse, 
     OpponentGuessedWordCorrectlyResponse, OpponentGuessedWordIncorrectlyResponse, SendMessageResponse } from "../interfaces/signal-r";
 import { Events } from "../utils/events";
 import { GameOverEventData, GuessLetterCorrectEventData, GuessWordCorrectEventData, NewGameStartedEventData, 
     OpponentGuessedWordCorrectlyEventData } from "../interfaces/event-data";
-import { type ILifecycleService, MyLifecycleService } from "../interfaces/lifecycle";
 import { IHydratedController } from "@aurelia/runtime-html";
 
-@inject(MyGameService, MyLifecycleService, MyBabylonService, MySignalRService, MyEventAggregator)
+@inject(MyGameService, MyBabylonService, MySignalRService, MyEventAggregator)
 export class Game implements IRouteableComponent {
-  constructor(public gameService: IGameService, private lifecycleService: ILifecycleService, private babylonService: IBabylonService, private signalRService: ISignalRService, private eventAggregator: IEventAggregator, @IRouter private router: IRouter, @IAureliaEventAggregator readonly ea: IAureliaEventAggregator) { 
+  constructor(public gameService: IGameService, private babylonService: IBabylonService, private signalRService: ISignalRService, private eventAggregator: IEventAggregator, @IRouter private router: IRouter, @IAureliaEventAggregator readonly ea: IAureliaEventAggregator) { 
     babylonService.currentGame = this;
     gameService.currentGame = this;
-    this.lifecycleService.registerComponent(ActionMessage);
-    this.lifecycleService.registerComponent(ChatMessage);
-    this.lifecycleService.registerComponent(GuessLetterModal);
-    this.lifecycleService.registerComponent(GuessWordModal);
-    this.lifecycleService.registerComponent(Header);
   }
 
     gameId?: string;
@@ -37,7 +31,13 @@ export class Game implements IRouteableComponent {
     playerIndex?: number;
     navigationSubscription?: IDisposable;
 
-    @bindable gwRef?: GuessWordModal;
+    @bindable actionMessageRef?: ActionMessage;
+    @bindable chatMessageRef?: ChatMessage;
+    @bindable drawerRef?: Drawer;
+    @bindable gameOverRef?: GameOverModal;
+    @bindable guessLetterRef?: GuessLetterModal;
+    @bindable guessWordRef?: GuessWordModal;
+    @bindable headerRef?: Header;
 
   header = Header;
   actionMessage = ActionMessage;
@@ -46,8 +46,6 @@ export class Game implements IRouteableComponent {
   gameOver = GameOverModal;
   guessLetter = GuessLetterModal;
   guessWord = GuessWordModal;
-
-  children: Children = {} as Children;
 
   getTrimmedHash() {
     const hash = window.location.hash;
@@ -67,7 +65,7 @@ export class Game implements IRouteableComponent {
   saveGame() {
     const savedGame: SavedGame = {
       gameData: this.toGameData(),
-      history: this.children.drawerRef.historyItems,
+      history: this.drawerRef!.historyItems,
       gameState: this.gameService.gameState
     };
     const str = JSON.stringify(savedGame);
@@ -105,11 +103,23 @@ export class Game implements IRouteableComponent {
   }
 
   async attached() {
+
+    if (this.actionMessageRef)
+      this.actionMessageRef.drawerRef = this.drawerRef;
+    if (this.chatMessageRef)
+      this.chatMessageRef.drawerRef = this.drawerRef;
+    if (this.guessLetterRef)
+      this.guessLetterRef.headerRef = this.headerRef;
+    if (this.guessWordRef)
+      this.guessWordRef.headerRef = this.headerRef;
+    if (this.headerRef)
+      this.headerRef.drawerRef = this.drawerRef;
+
     const isJoiningGame = localStorage.getItem('joining-game') !== null;
     if (isJoiningGame) {
       try {
         const playerState = this.gameService.gameState.getYourPlayerState();
-        this.children.guessLetterRef.setGuessedPositions(playerState.currentDifficulty);
+        this.guessLetterRef!.setGuessedPositions(playerState.currentDifficulty);
         this.navigationSubscription = this.ea.subscribe('au:router:navigation-end', payload => {
             this.saveGame();
         });
@@ -147,9 +157,9 @@ detaching(initiator: IHydratedController, parent: IHydratedController | null): v
 
     const savedGame: SavedGame = JSON.parse(loadGameResponse.savedGame) as SavedGame;
     this.updateObjectProperties(this.gameService.gameState, savedGame.gameState);
-    this.children.drawerRef.historyItems = savedGame.history;
+    this.drawerRef!.historyItems = savedGame.history;
 
-    this.children.guessLetterRef.setGuessedPositions(this.gameService.gameState.getYourPlayerState().currentDifficulty);
+    this.guessLetterRef!.setGuessedPositions(this.gameService.gameState.getYourPlayerState().currentDifficulty);
   }
 
   // Utility function to update object properties recursively
@@ -173,7 +183,7 @@ detaching(initiator: IHydratedController, parent: IHydratedController | null): v
       return;
     }
 
-    this.children.drawerRef.historyItems.push({ item: sendMessageResponse.message, yours: false, type: 'Message' });
+    this.drawerRef!.historyItems.push({ item: sendMessageResponse.message, yours: false, type: 'Message' });
   }
 
   private async handleCheckTileResponse(checkTileResponse: CheckTileResponse) {
@@ -185,7 +195,7 @@ detaching(initiator: IHydratedController, parent: IHydratedController | null): v
     if (checkTileResponse.occurrences === 0) {
       this.gameService.nextTurn();
     }
-    this.children.drawerRef.historyItems.push({ item: 'Guessed tile ' + checkTileResponse.letter + ' and found ' + checkTileResponse.occurrences + ' occurrences', yours: true});
+    this.drawerRef!.historyItems.push({ item: 'Guessed tile ' + checkTileResponse.letter + ' and found ' + checkTileResponse.occurrences + ' occurrences', yours: true});
     this.eventAggregator.publish(Events.CheckTile, { 'letter': checkTileResponse.letter, 'occurrences': checkTileResponse.occurrences });
 
   }
@@ -196,14 +206,14 @@ detaching(initiator: IHydratedController, parent: IHydratedController | null): v
       return;
     }
 
-    this.children.drawerRef.historyItems = [];
+    this.drawerRef!.historyItems = [];
     this.gameService.newGame(this.gameService.gameState.gameId, this.gameService.gameState.yourPlayerIndex === 0 ? 1 : 0, this.playerName || '', this.otherPlayerName || '', newGameStarted.opponentWord);
-    this.children.guessLetterRef.setGuessedPositions(this.gameService.gameState.getYourPlayerState().currentDifficulty);
+    this.guessLetterRef!.setGuessedPositions(this.gameService.gameState.getYourPlayerState().currentDifficulty);
     const data: NewGameStartedEventData = {};
     this.eventAggregator.publish(Events.NewGameStarted, data);
-    this.children.gameOverRef.isNewGameRequested = false;
+    this.gameOverRef!.isNewGameRequested = false;
     this.saveGame();
-    this.children.gameOverRef.toggleGameOverModal();
+    this.gameOverRef!.toggleGameOverModal();
   }
 
   private async handleGuessLetter(guessLetterResponse: GuessLetterResponse) {
@@ -214,12 +224,12 @@ detaching(initiator: IHydratedController, parent: IHydratedController | null): v
 
     if (!guessLetterResponse.isCorrect)
     {
-      this.children.drawerRef.historyItems.push({ item: `Guessed the letter ${guessLetterResponse.letter} incorrectly at position ${guessLetterResponse.position + 1}`, yours: true});
+      this.drawerRef!.historyItems.push({ item: `Guessed the letter ${guessLetterResponse.letter} incorrectly at position ${guessLetterResponse.position + 1}`, yours: true});
       this.gameService.nextTurn();
     }
     else
     {
-      this.children.drawerRef.historyItems.push({ item: `Guessed the letter ${guessLetterResponse.letter} correctly at position ${guessLetterResponse.position + 1}`, yours: true});
+      this.drawerRef!.historyItems.push({ item: `Guessed the letter ${guessLetterResponse.letter} correctly at position ${guessLetterResponse.position + 1}`, yours: true});
       const state = this.gameService.gameState.getYourPlayerState();
       state.wordView[guessLetterResponse.position] = guessLetterResponse.letter;
       const data: GuessLetterCorrectEventData = { letter: guessLetterResponse.letter, position: guessLetterResponse.position };
@@ -241,12 +251,12 @@ detaching(initiator: IHydratedController, parent: IHydratedController | null): v
     
     if (!opponentCheckedTileResponse.isCorrect)
     {
-      this.children.drawerRef.historyItems.push({ item: 'Opponent incorrectly guessed letter ' + opponentCheckedTileResponse.letter, yours: false});
+      this.drawerRef!.historyItems.push({ item: 'Opponent incorrectly guessed letter ' + opponentCheckedTileResponse.letter, yours: false});
       this.gameService.nextTurn();
     }
     else
     {
-      this.children.drawerRef.historyItems.push({ item: 'Opponent correctly guessed letter ' + opponentCheckedTileResponse.letter, yours: false});
+      this.drawerRef!.historyItems.push({ item: 'Opponent correctly guessed letter ' + opponentCheckedTileResponse.letter, yours: false});
     }
   }
 
@@ -258,24 +268,24 @@ detaching(initiator: IHydratedController, parent: IHydratedController | null): v
 
     if (!guessWordResponse.isCorrect)
     {
-      this.children.drawerRef.historyItems.push({ item: `Incorrectly guessed the word ${guessWordResponse.word}`, yours: true});
+      this.drawerRef!.historyItems.push({ item: `Incorrectly guessed the word ${guessWordResponse.word}`, yours: true});
       this.gameService.nextTurn();
     }
     else
     {
       if (guessWordResponse.isGameOver) {
-        this.children.drawerRef.historyItems.push({ item: `Correct! The word was ${guessWordResponse.word}`, yours: true});
-        this.children.gameOverRef.winner = 'player1';
-        this.children.gameOverRef.toggleGameOverModal();
-        const data: GameOverEventData = { winner: this.children.gameOverRef.winner };
+        this.drawerRef!.historyItems.push({ item: `Correct! The word was ${guessWordResponse.word}`, yours: true});
+        this.gameOverRef!.winner = 'player1';
+        this.gameOverRef!.toggleGameOverModal();
+        const data: GameOverEventData = { winner: this.gameOverRef!.winner };
         this.eventAggregator.publish(Events.GameOver, data);
       }
       else {
         const playerState = this.gameService.gameState.getYourPlayerState();
         playerState.currentDifficulty++;
         playerState.wordView = new Array(playerState.currentDifficulty).fill('_');
-        this.children.guessLetterRef.setGuessedPositions(this.gameService.gameState.getYourPlayerState().currentDifficulty);
-        this.children.drawerRef.historyItems.push({ item: `Correct! The word was ${guessWordResponse.word}`, yours: true});
+        this.guessLetterRef!.setGuessedPositions(this.gameService.gameState.getYourPlayerState().currentDifficulty);
+        this.drawerRef!.historyItems.push({ item: `Correct! The word was ${guessWordResponse.word}`, yours: true});
         const data: GuessWordCorrectEventData = { word: guessWordResponse.word };
         this.eventAggregator.publish(Events.GuessWordCorrect, data);
       }
@@ -292,7 +302,7 @@ detaching(initiator: IHydratedController, parent: IHydratedController | null): v
       return;
     }
 
-    this.children.drawerRef.historyItems.push({ item: 'Opponent incorrectly guessed letter ' + opponentGuessedLetterIncorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterIncorrectlyResponse.position + 1), yours: false});
+    this.drawerRef!.historyItems.push({ item: 'Opponent incorrectly guessed letter ' + opponentGuessedLetterIncorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterIncorrectlyResponse.position + 1), yours: false});
     this.gameService.nextTurn();
   }
 
@@ -309,7 +319,7 @@ detaching(initiator: IHydratedController, parent: IHydratedController | null): v
 
     this.gameService.gameState.getOpponentPlayerState().wordView[opponentGuessedLetterCorrectlyResponse.position] = opponentGuessedLetterCorrectlyResponse.letter;
 
-    this.children.drawerRef.historyItems.push({ item: 'Opponent correctly guessed the letter ' + opponentGuessedLetterCorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterCorrectlyResponse.position + 1), yours: false});
+    this.drawerRef!.historyItems.push({ item: 'Opponent correctly guessed the letter ' + opponentGuessedLetterCorrectlyResponse.letter + ' at position ' + (opponentGuessedLetterCorrectlyResponse.position + 1), yours: false});
 
     if (opponentGuessedLetterCorrectlyResponse.letter) {
       const opponentGameState = this.gameService.gameState.getOpponentPlayerState();
@@ -326,7 +336,7 @@ detaching(initiator: IHydratedController, parent: IHydratedController | null): v
     {
       return;
     }
-    this.children.drawerRef.historyItems.push({ item: 'Opponent incorrectly guessed word ' + opponentGuessedWordIncorrectlyResponse.word, yours: false});
+    this.drawerRef!.historyItems.push({ item: 'Opponent incorrectly guessed word ' + opponentGuessedWordIncorrectlyResponse.word, yours: false});
     this.gameService.nextTurn();
   }
 
@@ -341,12 +351,12 @@ detaching(initiator: IHydratedController, parent: IHydratedController | null): v
       return;
     }
 
-    this.children.drawerRef.historyItems.push({ item: 'Opponent correctly guessed the word ' + opponentGuessedWordCorrectlyResponse.word, yours: false});
+    this.drawerRef!.historyItems.push({ item: 'Opponent correctly guessed the word ' + opponentGuessedWordCorrectlyResponse.word, yours: false});
 
     if (opponentGuessedWordCorrectlyResponse.isGameOver) {
-      this.children.gameOverRef.winner = 'player2';
-      this.children.gameOverRef.toggleGameOverModal();
-      const data: GameOverEventData = { winner: this.children.gameOverRef.winner };
+      this.gameOverRef!.winner = 'player2';
+      this.gameOverRef!.toggleGameOverModal();
+      const data: GameOverEventData = { winner: this.gameOverRef!.winner };
       this.eventAggregator.publish(Events.GameOver, data);
     }
     else if (opponentGuessedWordCorrectlyResponse.newWord) {

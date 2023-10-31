@@ -24,12 +24,6 @@ export class GameOverModal {
     constructor(private signalRService: ISignalRService) {
 
     }
-  
-      bound(initiator: any, parent: any) {
-        if (this.parentViewModel) {
-          this.parentViewModel.children.gameOverRef = this;
-        }
-      }
 
       playNewGame() {
         this.isNewGameRequested = true;

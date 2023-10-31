@@ -3,10 +3,9 @@ import { bindable, containerless, inject } from "aurelia";
 import { type IGameService, MyGameService } from "../../interfaces/services";
 import { Game } from "../game";
 import { IRouter } from "@aurelia/router";
-import { ILifecycleEvent, type ILifecycleService, LifecycleHooks, MyLifecycleService } from "../../interfaces/lifecycle";
 
 @containerless
-@inject(MyGameService, MyLifecycleService)
+@inject(MyGameService)
 export class Header {
     
   @bindable parentViewModel?: Game;
@@ -14,16 +13,8 @@ export class Header {
     showGuessWordModal = false;
     drawerRef?: Drawer;
 
-    constructor(public gameService: IGameService, private lifecycleService: ILifecycleService, @IRouter private router: IRouter) {
-      this.lifecycleService.subscribe(Header, LifecycleHooks.Bound, this.handleLifecycleEvent.bind(this));
-    }
+    constructor(public gameService: IGameService, @IRouter private router: IRouter) {
 
-    private handleLifecycleEvent(event: ILifecycleEvent) {
-      if (event.lifecycleHook === LifecycleHooks.Bound) {
-        if (this.parentViewModel) {
-          this.drawerRef = this.parentViewModel.children.drawerRef;
-        }
-      }
     }
 
     get playerName() {
@@ -33,13 +24,6 @@ export class Header {
     get otherPlayerName() {
         return this.parentViewModel?.otherPlayerName;
     }
-
-      bound(initiator: any, parent: any) {
-        if (this.parentViewModel) {
-          this.parentViewModel.children.headerRef = this;
-        }
-        this.lifecycleService.notifyLifecycleEvent(Header, LifecycleHooks.Bound);
-      }
 
       toggleHistory() {
         this.drawerRef?.toggleHistory();
@@ -55,10 +39,5 @@ export class Header {
     
       exitGame() {
         this.router.load('join-game');
-      }
-
-      detached() {
-        this.lifecycleService.unsubscribe(Header, LifecycleHooks.Bound);
-        this.lifecycleService.unregisterComponent(Header);
       }
 }
