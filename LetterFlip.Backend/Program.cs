@@ -61,7 +61,7 @@ namespace LetterFlip.Backend
             builder.Services.AddCors(options =>
             {
                 options.AddPolicy("AllowMyOrigin",
-                    builder => builder.WithOrigins("http://localhost:8080")
+                    builder => builder.WithOrigins("http://localhost:8080", "http://localhost:4173")
                                        .AllowAnyHeader()
                                        .AllowAnyMethod()
                                        .AllowCredentials());

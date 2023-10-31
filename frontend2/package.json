@@ -1,0 +1,38 @@
+{
+  "name": "frontend2",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "serve": "vite preview",
+    "test": "vitest"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@aurelia/router": "^2.0.1-dev.202310162153",
+    "@aurelia/vite-plugin": "^2.0.1-dev.202310162153",
+    "@babylonjs/core": "^6.24.0",
+    "@babylonjs/gui": "^6.24.0",
+    "@babylonjs/havok": "^1.2.1",
+    "@microsoft/signalr": "^7.0.12",
+    "@tailwindcss/forms": "^0.5.6",
+    "aurelia": "^2.0.1-dev.202310162153",
+    "autoprefixer": "^10.4.16",
+    "babylonjs": "^6.24.0",
+    "daisyui": "^3.9.3",
+    "msw": "^2.0.1",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.3"
+  },
+  "devDependencies": {
+    "vite": "^4.5.0",
+    "vitest": "^1.0.0-beta.3"
+  },
+  "msw": {
+    "workerDirectory": "static"
+  }
+}

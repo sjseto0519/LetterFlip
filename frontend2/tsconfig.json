@@ -1,0 +1,37 @@
+{
+    "compilerOptions": {
+      "target": "ESNext",
+      "module": "ESNext",
+      "moduleResolution": "node",
+      "lib": ["DOM", "ESNext"],
+      "allowJs": true,
+      "jsx": "react",
+      "esModuleInterop": true,
+      "allowSyntheticDefaultImports": true,
+      "strict": true,
+      "forceConsistentCasingInFileNames": true,
+      "experimentalDecorators": true,
+      "emitDecoratorMetadata": true,
+      "outDir": "dist",
+      "isolatedModules": true,
+      "baseUrl": "./",
+      "paths": {
+        "@builders/*": ["src/builders/*"],
+        "@components/*": ["src/components/*"],
+        "@connections/*": ["src/connections/*"],
+        "@interfaces/*": ["src/interfaces/*"],
+        "@models/*": ["src/models/*"],
+        "@services/*": ["src/services/*"],
+        "@state/*": ["src/state/*"],
+        "@utils/*": ["src/utils/*"],
+        // Add more aliases as needed
+      }
+    },
+    "include": [
+      "src/**/*.ts",
+      "mocks/**/*.ts"
+    ],
+    "exclude": [
+      "node_modules"
+    ]
+  }

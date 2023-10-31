@@ -91,7 +91,7 @@ export class SignalRService {
   
     constructor() {
       const mockConnectionBuilder = new MockHubConnectionBuilder();
-      const connectionBuilder = new RealHubConnectionBuilder("https://localhost:7213/gamehub");
+      const connectionBuilder = new RealHubConnectionBuilder("/gamehub");
       this.connection = new DualHubConnection(connectionBuilder);
     }
   
